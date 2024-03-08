@@ -10,7 +10,9 @@ router.post('/signup', middleware.validateUser, middleware.validate, UserControl
 router.post('/login', UserControllers.login);
 router.post('/verifyEmail', UserControllers.verifyEmail);
 router.post('/forgetPassword',  UserControllers.forgetPassword);
-router.post('/resetPassword', isresetOtpValid, UserControllers.resetPassword);
+router.post('/resetPassword', UserControllers.resetPassword);
+router.get('/logout', UserControllers.logout);
+router.post('/verifyResetOtp', UserControllers.verifyResetOtp);
 
 module.exports = router;
 

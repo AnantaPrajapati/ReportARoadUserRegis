@@ -18,7 +18,7 @@ class service{
           })
 
            await VerificationOTP.save();
-          await createUser.save();
+           await createUser.save();
 
           mailTransport().sendMail({
             from: 'verifyotp@gmail.com',

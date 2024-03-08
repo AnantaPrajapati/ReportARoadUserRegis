@@ -1,6 +1,7 @@
 const mongoose =require('mongoose');
 const bcrypt = require('bcrypt');
 const dbConnection = require('../config/dbConnection');
+const { sendError } = require('../otp/error');
 // const VerificationOtp = require('../model/VerificationOtp'); 
 
 const{Schema} = mongoose;
@@ -54,7 +55,7 @@ UserSchema.pre('save', async function(next){
 
             const error = new Error("Password do not match");
             error.code = 400;
-            return next(error);
+            return sendError(error);
         }
         //hashing password 
         const salt = await(bcrypt.genSalt(11));

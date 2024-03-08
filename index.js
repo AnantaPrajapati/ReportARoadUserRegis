@@ -1,6 +1,7 @@
 const app = require('./app');
 const dbConnection = require('./config/dbConnection');
  const UserModel = require('./model/UserModel');
+ const ReportModel = require('./model/ReportModel');
 const port = 3000;
 const dotenv = require('dotenv').config();
 

@@ -4,10 +4,10 @@ const dbConnection = require('../config/dbConnection');
 
 const{Schema} = mongoose;
 
-const ResertOtpSchema =  new Schema({
-  owner:{
-    type: mongoose.Schema.Types.ObjectId,
-    ref:'User',
+const ResetOtpSchema =  new Schema({
+  email: {
+    type: String,
+    lowercase: true,
     required: true
   },
   otp:{
@@ -21,7 +21,7 @@ const ResertOtpSchema =  new Schema({
   }
 });
 
-ResertOtpSchema.pre('save', async function(next){
+ResetOtpSchema.pre('save', async function(next){
   if(this.isModified("otp")){
     const hash = await bcrypt.hash(this.otp, 8);
     this.otp=hash;
@@ -29,7 +29,7 @@ ResertOtpSchema.pre('save', async function(next){
   next();
 });
 
-ResertOtpSchema.methods.compareotp = async function (hashedOtp) {
+ResetOtpSchema.methods.compareotp = async function (hashedOtp) {
     try {
         const isMatch = await bcrypt.compare(this.otp, hashedOtp);
         return isMatch;
@@ -39,6 +39,6 @@ ResertOtpSchema.methods.compareotp = async function (hashedOtp) {
 };
 
 
-const ResetOtpModel = dbConnection.model('ResetOtp',ResertOtpSchema);
+const ResetOtpModel = dbConnection.model('ResetOtp',ResetOtpSchema);
 
 module.exports = ResetOtpModel;

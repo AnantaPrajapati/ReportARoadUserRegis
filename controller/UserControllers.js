@@ -7,7 +7,7 @@ const User = require('../model/UserModel');
 const VerificationOtp = require('../model/VerificationOtp');
 const ResetOtp = require('../model/resetOtp');
 const { sendError , createRandomBytes} = require('../otp/error');
-const { mailTransport } = require('../otp/mail');
+const { mailTransport, generateOTP } = require('../otp/mail');
 const { isValidObjectId } = require('mongoose');
 
 const crypto = require('crypto');
@@ -37,12 +37,17 @@ exports.login = async ( req, resp, next) => {
         // const User = await UserService.checkUser(email);
         const User = await service.checkUser(email);
         if (!User) {
-            throw new Error("User doesn't exitst");
+            return sendError(resp, "User doesn't exitst");
+        }
+
+        // Check if the user's email is verified
+        if (!User.verified) {
+            return sendError(resp, "Email is not verified");
         }
 
         const isPasswordMatch = await User.comparePassword(password);
         if (isPasswordMatch === false) {
-            throw new Error("Password doesn't match");
+            return sendError(resp, "Password doesn't match");
         }
 
         let tokenData = { _id: User._id, email: User.email };
@@ -70,12 +75,13 @@ exports.verifyEmail = async (req, resp) => {
         const otpRecord = await VerificationOtp.findOne({ email }); // Find OTP record by email
         if (!otpRecord) return sendError(resp, "OTP record not found");
 
-        // Compare hashed OTPs
+         // Compare hashed OTPs
         const isMatch = await bcrypt.compare(Otp, otpRecord.otp);
         if (!isMatch) return sendError(resp, "Invalid OTP");
 
         user.verified = true;
-        await user.save();
+        // await user.save();
+        await User.findOneAndUpdate({ email }, { $set: { verified: true } });
         await otpRecord.deleteOne();
 
         await mailTransport().sendMail({
@@ -85,7 +91,7 @@ exports.verifyEmail = async (req, resp) => {
             html: `<h1>Welcome! Your email has been verified successfully.</h1>`
         });
 
-        resp.json({ status: true, message: "Your email has been verified." });
+        resp.json({ status: true, email: user.email });
     } catch (error) {
         console.error("Error in verifyEmail:", error);
         sendError(resp, "Internal server error: " + error.message); // Return detailed error message
@@ -102,10 +108,10 @@ exports.forgetPassword = async (req, resp) => {
         if (!user) return sendError(resp, 'User not found');
 
         // Generate a random OTP
-        const randomBytes = await createRandomBytes();
+        const randomBytes = generateOTP();
         
         // Create a new ResetOtp instance with owner and otp
-        const resetOtp = new ResetOtp({ owner: user._id, otp: randomBytes });
+        const resetOtp = new ResetOtp({ email:email, otp: randomBytes });
         await resetOtp.save();
 
         // Send email with the OTP
@@ -123,31 +129,93 @@ exports.forgetPassword = async (req, resp) => {
     }
 };
 
+exports.verifyResetOtp = async (req, resp) => {
+    try {
+        const { email, Otp } = req.body;
+        if (!email || !Otp.trim()) {
+            return sendError(resp, 'Invalid request, missing parameters');
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return sendError(resp, 'User not found');
+        }
+        const otpRecord = await ResetOtp.findOne({ email });
+        if (!otpRecord) {
+            return sendError(resp, "OTP record not found");
+        }
+
+        // Check if OTP is expired
+        if (otpRecord.expiresAt < new Date()) {
+            return sendError(resp, "OTP has expired. Please request a new one.");
+        }
+
+        const isMatch = await bcrypt.compare(Otp, otpRecord.otp);
+        if (!isMatch) {
+            return sendError(resp, "Invalid OTP");
+        }
+        // await user.save();
+
+        // Delete OTP record
+        await otpRecord.deleteOne();
+
+        resp.json({ status: true, email: user.email });
+    } catch (error) {
+        console.error("Error in Resetting password:", error);
+        sendError(resp, "Internal server error: " + error.message);
+    }
+};
 
 exports.resetPassword = async (req, resp) => {
-    const {password} = req.body;
+   
+    try {
+        const { email, password, Cpassword } = req.body;
+       
+        const user = await User.findOne({ email });
+        if (!user) return sendError(resp, 'User not found');
 
-    const user = await User.findById(req.user._id);
-    if(!user) sendError(resp, 'user not found ');
-    if(!user) sendError(resp, 'user not found ');
-    const isSamePassword = await user.comparePassword(password)
-    if(isSamePassword) sendError(resp, 'Enter new password');
+        // if(!password || !Cpassword){
+        //     return sendError(resp, "Enter new password");
+        // }
+        // if(password = !Cpassword){
+        //     return sendError(resp, "Password do not match");
+        // }
+        const salt = await bcrypt.genSalt(11);
+        const hashPass = await bcrypt.hash(password, salt);
+        const newPassword = hashPass;
 
-    if(password.trim()/length <8 || password.trim().length > 20)
-    return sendError(resp, 'Password must be 8 to 20 characters long');
+        const updatedUser = await User.findOneAndUpdate(
+            { email },
+            { password: newPassword },
+            { new: true }
+        );
 
-    user.password = password.trim();
-    await user.save();
+        await ResetOtp.findOneAndDelete({ email });
 
-    await ResetOtp.findOneAndDelete({owner: user._id})
+        await mailTransport().sendMail({
+            from: 'security@gmail.com',
+            to: user.email,
+            subject: 'Password Reset',
+            html: '<h1>Password reset successfully. Now you can reset your password</h1>'
+        });
 
-    await mailTransport().sendMail({
-        from: 'security@gmail.com',
-        to: user.email,
-        subject: "Password Reset ",
-        html: `<h1>Password reset successfully. Now you can reset your password</h1>`
-    });
+        resp.json({ success: true, message: 'Password reset successfully' });
+    } catch (error) {
+        console.error('Error in resetting password:', error);
+        sendError(resp, 'Internal server error: ' + error.message);
+    }
+};
 
-    resp.json({success: true, message:"Password reset successfully"});
+
+
+exports.logout = async (req, resp, next)=>{
+
+    try{
+        req.session.destroy();
+        resp.redirect('/login');
+    }
+    catch(error){
+     console.warn(error.message);
+    }
 
 }
