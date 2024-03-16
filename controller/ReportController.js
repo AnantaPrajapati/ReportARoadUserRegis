@@ -1,16 +1,18 @@
+const { sendError } = require('../otp/error');
 const ReportServices = require('../services/ReportServices');
 
-exports.createReport = async (req, resp, next)=>{
+exports.createReport = async (req, resp, next) => {
+    try {
+        const { userId, location, photo, severity, desc } = req.body;
 
-    try{
-   const  {userId, location, photo, severity, desc} = req.body;
-   
-   let Report = await ReportServices.createReport(userId, location, photo, severity, desc);
+        
+        if (!userId || !location || !photo || !severity || !desc) {
+            return sendError(resp, 'All fields are required');
+        }
 
-   resp.json({status:true, success:Report});
-   
-    }catch(error){
+        let Report = await ReportServices.createReport(userId, location, photo, severity, desc);
+        resp.json({ status: true, success: Report });
+    } catch (error) {
         next(error);
     }
-
-}
+};
