@@ -1,8 +1,8 @@
 const UserModel = require('../model/UserModel');
 const VerificationOtp = require('../model/VerificationOtp');
 const jwt = require('jsonwebtoken');
-const {generateOTP, mailTransport } = require('../otp/mail');
-const { sendError } = require('../otp/error');
+const {generateOTP, mailTransport } = require('../utils/mail');
+const { sendError } = require('../utils/error');
 const { isValidObjectId } = require('mongoose');
 
 class service{

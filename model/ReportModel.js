@@ -5,18 +5,28 @@ const{Schema} = mongoose;
 
 const ReportSchema =  new Schema({
 
-    userId:{
-        type: Schema.Types.ObjectId,
-        ref:UserModel.modelName
-    },
+    // userId:{
+    //     type: Schema.Types.ObjectId,
+    //     ref:UserModel.modelName
+    // },
+    email: {
+        type: String,
+        lowercase: true,
+        required: true
+      },
  
     location:{
         type: String,
         required: true
     },
-    photo:{
-        data: Buffer, 
-        contentType: String 
+    image:{
+        type: String, 
+        required: true
+    },
+    contentType: {
+        type: String,
+        // required: true
+        
     },
     severity:{
         type: String,
@@ -33,3 +43,6 @@ const ReportSchema =  new Schema({
 const ReportModel = dbConnection.model('Report',ReportSchema);
 
 module.exports = ReportModel;
+
+
+

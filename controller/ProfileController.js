@@ -1,6 +1,6 @@
 const Profile = require('./UserControllers');
 const User = require('../model/UserModel');
-const { sendError} = require('../otp/error');
+const { sendError } = require('../utils/error');
 // Route for profile page
 exports.profile = async (req, resp) => {
     try {

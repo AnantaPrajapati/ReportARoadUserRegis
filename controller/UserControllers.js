@@ -6,8 +6,8 @@ const bcrypt = require('bcrypt');
 const User = require('../model/UserModel');
 const VerificationOtp = require('../model/VerificationOtp');
 const ResetOtp = require('../model/resetOtp');
-const { sendError , createRandomBytes} = require('../otp/error');
-const { mailTransport, generateOTP } = require('../otp/mail');
+const { sendError, createRandomBytes} = require('../utils/error');
+const { mailTransport, generateOTP } = require('../utils/mail');
 const { isValidObjectId } = require('mongoose');
 
 const crypto = require('crypto');

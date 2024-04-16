@@ -1,7 +1,7 @@
 const mongoose =require('mongoose');
 const bcrypt = require('bcrypt');
 const dbConnection = require('../config/dbConnection');
-const { sendError } = require('../otp/error');
+const { sendError } = require('../utils/error');
 // const VerificationOtp = require('../model/VerificationOtp'); 
 
 const{Schema} = mongoose;
