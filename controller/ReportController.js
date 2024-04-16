@@ -2,6 +2,7 @@
 const { sendError } = require('../utils/error');
 const ReportServices = require('../services/ReportServices');
 const User = require('../model/UserModel');
+const IncidentServices = require('../services/ReportServices');
 
 
 exports.createReport = async (req, resp, next) => {
@@ -41,7 +42,34 @@ exports.getReport = async (req, resp, next) => {
         next(error);
     }
 };
+exports.IncidentReport = async (req, resp, next) => {
+    try {
+        const { email, location, image, title, desc } = req.body;
 
+        const user= await User.findOne({ email: email });
+        if (!user) {
+            return sendError(resp, "User doesn't exitst");
+        }
+
+        if(!location){
+            return sendError(resp, "Please enter the location");
+        } 
+        if(!image){
+            return sendError(resp, "Image dosen't exist");
+        } 
+        if(!title ){
+            return sendError(resp, "Please mention the severity");
+        } 
+        if( !desc) {
+            return sendError(resp, 'Fill up the description');
+        }
+
+        let Report = await IncidentServices.createReport(email, location, image, title, desc);
+        resp.json({ status: true, });
+    } catch (error) {
+        next(error);
+    }
+};
 // const { sendError } = require('../otp/error');
 // const ReportServices = require('../services/ReportServices');
 // const User = require('../model/UserModel');

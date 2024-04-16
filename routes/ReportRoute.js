@@ -4,6 +4,7 @@ const ReportController = require('../controller/ReportController');
 
 
 router.post('/report', ReportController.createReport);
+router.post('/incident', ReportController.IncidentReport);
 router.get('/getReport', ReportController.getReport );
 
 

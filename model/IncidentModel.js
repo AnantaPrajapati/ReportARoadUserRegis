@@ -3,7 +3,7 @@ const dbConnection = require('../config/dbConnection');
 const UserModel = require('../model/UserModel');
 const{Schema} = mongoose;
 
-const ReportSchema =  new Schema({
+const IncidentSchema =  new Schema({
 
     // userId:{
     //     type: Schema.Types.ObjectId,
@@ -14,7 +14,10 @@ const ReportSchema =  new Schema({
         lowercase: true,
         required: true
       },
- 
+    title:{
+        type: String,
+        required: true,
+    },
     location:{
         type: String,
         required: true
@@ -29,10 +32,6 @@ const ReportSchema =  new Schema({
         // required: true
         
     },
-    severity:{
-        type: String,
-        required: true,
-    },
     desc:{
         type: String,
         required: true
@@ -41,9 +40,9 @@ const ReportSchema =  new Schema({
 
 });
 
-const ReportModel = dbConnection.model('Report',ReportSchema);
+const IncidentModel = dbConnection.model('Incident',IncidentSchema);
 
-module.exports = ReportModel;
+module.exports = IncidentModel;
 
 
 
