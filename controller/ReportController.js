@@ -2,17 +2,17 @@
 const { sendError } = require('../utils/error');
 const ReportServices = require('../services/ReportServices');
 const User = require('../model/UserModel');
-const IncidentServices = require('../services/ReportServices');
+const IncidentServices = require('../services/IncidentService');
 
 
 exports.createReport = async (req, resp, next) => {
     try {
-        const { email, location, image, severity, desc } = req.body;
+        const { userId, location, image, severity, desc } = req.body;
 
-        const user= await User.findOne({ email: email });
-        if (!user) {
-            return sendError(resp, "User doesn't exitst");
-        }
+        // const user= await User.findOne({ email: email });
+        // if (!user) {
+        //     return sendError(resp, "User doesn't exitst");
+        // }
 
         if(!location){
             return sendError(resp, "Please enter the location");
@@ -27,7 +27,7 @@ exports.createReport = async (req, resp, next) => {
             return sendError(resp, 'Fill up the description');
         }
 
-        let Report = await ReportServices.createReport(email, location, image, severity, desc);
+        let Report = await ReportServices.createReport(userId, location, image, severity, desc);
         resp.json({ status: true, });
     } catch (error) {
         next(error);
@@ -35,13 +35,23 @@ exports.createReport = async (req, resp, next) => {
 };
 exports.getReport = async (req, resp, next) => {
     try {
-        const { email } = req.body;
-        let report = await ReportServices.getReport(email);
+        const { userId } = req.body;
+        let report = await ReportServices.getReport(userId);
         resp.json({ status: true, success:report });
     } catch (error) {
         next(error);
     }
 };
+exports.deleteReport =  async (req,res,next)=>{
+    try {
+        const { email } = req.body;
+        let deletedData = await ReportServices.deleteReport(email);
+        res.json({status: true,success:deletedData});
+    } catch (error) {
+        console.log(error, 'err---->');
+        next(error);
+    }
+}
 exports.IncidentReport = async (req, resp, next) => {
     try {
         const { email, location, image, title, desc } = req.body;

@@ -6,7 +6,7 @@ const ProfileController = require('../controller/ProfileController');
 
 const middleware = require('../middleware/validator');
 
-const {isresetOtpValid}= require('../middleware/resetOtp');
+// const {isresetOtpValid}= require('../middleware/resetOtp');
 
 router.post('/signup', middleware.validateUser, middleware.validate, UserControllers.signup);
 router.post('/login', UserControllers.login);
@@ -17,7 +17,9 @@ router.get('/logout', UserControllers.logout);
 router.post('/verifyResetOtp', UserControllers.verifyResetOtp);
 
 router.get('/profile/:id', ProfileController.profile);
-// router.post('/UpdateProfile', ProfileController.profile);
+router.post('/UpdateProfile/:id', ProfileController.updateProfile);
+router.post('/ChangePassword/:id', ProfileController.ChangePassword);
+
 
 
 module.exports = router;

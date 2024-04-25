@@ -50,7 +50,7 @@ exports.login = async ( req, resp, next) => {
             return sendError(resp, "Password doesn't match");
         }
 
-        let tokenData = { _id: User._id, email: User.email };
+        let tokenData = { _id: User._id, email: User.email, username: User.username };
         // const token = await UserService.generateToken(tokenData, "secretkey", '1hr');
         const token = await service.generateToken(tokenData, "secretkey", '1hr');
 
@@ -72,10 +72,10 @@ exports.verifyEmail = async (req, resp) => {
 
         if (user.verified) return sendError(resp, "This account is already verified");
 
-        const otpRecord = await VerificationOtp.findOne({ email }); // Find OTP record by email
+        const otpRecord = await VerificationOtp.findOne({ email }); 
         if (!otpRecord) return sendError(resp, "OTP record not found");
 
-         // Compare hashed OTPs
+         
         const isMatch = await bcrypt.compare(Otp, otpRecord.otp);
         if (!isMatch) return sendError(resp, "Invalid OTP");
 
@@ -174,19 +174,19 @@ exports.resetPassword = async (req, resp) => {
         const user = await User.findOne({ email });
         if (!user) return sendError(resp, 'User not found');
 
-        // if(!password || !Cpassword){
-        //     return sendError(resp, "Enter new password");
-        // }
-        // if(password = !Cpassword){
-        //     return sendError(resp, "Password do not match");
-        // }
+        if(!password || !Cpassword){
+            return sendError(resp, "Enter new password");
+        }
+        if(password !== Cpassword){
+            return sendError(resp, "Password do not match");
+        }
         const salt = await bcrypt.genSalt(11);
         const hashPass = await bcrypt.hash(password, salt);
         const newPassword = hashPass;
 
         const updatedUser = await User.findOneAndUpdate(
             { email },
-            { password: newPassword },
+            { password: newPassword , Cpassword: newPassword },
             { new: true }
         );
 

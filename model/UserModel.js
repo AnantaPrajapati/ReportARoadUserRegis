@@ -50,14 +50,13 @@ const UserSchema =  new Schema({
 UserSchema.pre('save', async function(next){
     try{
         const user = this;
-        //checking if password matches or not 
+       
         if(user.password !== user.Cpassword){
 
             const error = new Error("Password do not match");
             error.code = 400;
             return sendError(error);
-        }
-        //hashing password 
+        } 
         const salt = await(bcrypt.genSalt(11));
         const hashPass = await bcrypt.hash(user.password, salt);
         const hashCpass = await bcrypt.hash(user.Cpassword, salt);

@@ -1,33 +1,26 @@
-const { IncidentReport } = require('../controller/ReportController');
-const IncidentModel = require('../model/IncidentModel');
+// const { IncidentReport } = require('../controller/ReportController');
+// // const IncidentModel = require('../model/IncidentModel');
 const ReportModel = require('../model/ReportModel');
-const UserModel = require('../model/UserModel');
+// const UserModel = require('../model/UserModel');
 
 class ReportServices{
 
-    static async createReport(email, location, image, severity, desc, contentType){
-        const createReport = new ReportModel({email, location, image, severity, desc, contentType});
+    static async createReport(userId, location, image, severity, desc){
+        const createReport = new ReportModel({userId, location, image, severity, desc});
         return await createReport.save();
     }
-    static async getReport(email){
-        const report = await ReportModel.find({email})
+    static async getReport(userId){
+        const report = await ReportModel.find({userId})
         return report;
     }
+    static async deleteReport(email){
+        const deleted = await ReportModel.findOneAndDelete({email})
+        return deleted;
+   }
 }
 
-class IncidentServices{
 
-    static async createReport(email, location, image, title, desc, contentType){
-        const IncidentReport = new IncidentModel({email, location, image, title, desc, contentType});
-        return await IncidentReport.save();
-    }
-    static async getReport(email){
-        const incident = await IncidentModel.find({email})
-        return incident;
-    }
-}
-
-module.exports = IncidentServices;
+module.exports = ReportServices;
 
 
 // const ReportModel = require('../model/ReportModel');

@@ -5,15 +5,15 @@ const{Schema} = mongoose;
 
 const ReportSchema =  new Schema({
 
-    // userId:{
-    //     type: Schema.Types.ObjectId,
-    //     ref:UserModel.modelName
-    // },
-    email: {
-        type: String,
-        lowercase: true,
-        required: true
-      },
+    userId:{
+        type: Schema.Types.ObjectId,
+        ref:UserModel.modelName
+    },
+    // email: {
+    //     type: String,
+    //     lowercase: true,
+    //     required: true
+    //   },
  
     location:{
         type: String,
@@ -24,11 +24,11 @@ const ReportSchema =  new Schema({
         required: true,
         unique: true
     },
-    contentType: {
-        type: String,
-        // required: true
+    // contentType: {
+    //     type: String,
+    //     // required: true
         
-    },
+    // },
     severity:{
         type: String,
         required: true,
