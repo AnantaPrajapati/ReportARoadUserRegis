@@ -41,7 +41,7 @@ class service{
       
    }
 
-   static async generateToken(tokenData, secretKey,jwt_expire){
+   static async generateAccessToken(tokenData, secretKey,jwt_expire){
       return jwt.sign(tokenData, secretKey, {expiresIn:jwt_expire});
    }
 

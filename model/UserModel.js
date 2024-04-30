@@ -28,13 +28,17 @@ const UserSchema =  new Schema({
     email:{
         type: String,
         lowercase: true,
-        required: true,
-        unique: true
-
+        required: [true, "userName can't be empty"],
+        // @ts-ignore
+        match: [
+            /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/,
+            "userName format is not correct",
+        ],
+        unique: true,
     },
     password:{
         type: String,
-        required: true
+        required: [true, "password is required"],
     },
     Cpassword:{
         type: String,
@@ -45,7 +49,7 @@ const UserSchema =  new Schema({
         default: false,
         required: true,
     },
-});
+},{timestamps:true});
 
 UserSchema.pre('save', async function(next){
     try{

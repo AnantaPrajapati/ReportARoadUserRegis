@@ -5,16 +5,28 @@ const ReportModel = require('../model/ReportModel');
 
 class ReportServices{
 
-    static async createReport(userId, location, image, severity, desc){
-        const createReport = new ReportModel({userId, location, image, severity, desc});
+    static async createReport(userId, location, image, severity, desc, status){
+        const createReport = new ReportModel({userId, location, image, severity, desc, status});
         return await createReport.save();
     }
-    static async getReport(userId){
-        const report = await ReportModel.find({userId})
+    static async getReport(userId, status = 'pending'){
+        const report = await ReportModel.find({userId, status })
         return report;
     }
-    static async deleteReport(email){
-        const deleted = await ReportModel.findOneAndDelete({email})
+    static async getAllReports(userId) {
+        const query = userId ? { userId } : {};
+        const reports = await ReportModel.find(query);
+        return reports;
+    }
+
+    static async approveReport(userId, status= 'Approved') {
+        const query = userId ? { userId } : {};
+        const reports = await ReportModel.find(userId, status);
+        return reports;
+    }
+    
+    static async deleteReport(id){
+        const deleted = await ReportModel.findByIdAndDelete({_id:id})
         return deleted;
    }
 }

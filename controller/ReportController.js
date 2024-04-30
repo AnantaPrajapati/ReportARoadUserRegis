@@ -3,7 +3,8 @@ const { sendError } = require('../utils/error');
 const ReportServices = require('../services/ReportServices');
 const User = require('../model/UserModel');
 const IncidentServices = require('../services/IncidentService');
-
+const https = require('https');
+const ReportModel = require('../model/ReportModel');
 
 exports.createReport = async (req, resp, next) => {
     try {
@@ -26,8 +27,9 @@ exports.createReport = async (req, resp, next) => {
         if( !desc) {
             return sendError(resp, 'Fill up the description');
         }
+        const reportStatus = "pending";
 
-        let Report = await ReportServices.createReport(userId, location, image, severity, desc);
+        let Report = await ReportServices.createReport(userId, location, image, severity, desc,reportStatus);
         resp.json({ status: true, });
     } catch (error) {
         next(error);
@@ -35,17 +37,21 @@ exports.createReport = async (req, resp, next) => {
 };
 exports.getReport = async (req, resp, next) => {
     try {
-        const { userId } = req.body;
-        let report = await ReportServices.getReport(userId);
+        
+        const userId = req.query.userId;
+        let report = await ReportServices.getReport(userId, 'pending');
         resp.json({ status: true, success:report });
     } catch (error) {
         next(error);
     }
 };
+
+
 exports.deleteReport =  async (req,res,next)=>{
     try {
-        const { email } = req.body;
-        let deletedData = await ReportServices.deleteReport(email);
+        console.log(req.query.id);
+        const { id } = req.body;
+        let deletedData = await ReportServices.deleteReport(id);
         res.json({status: true,success:deletedData});
     } catch (error) {
         console.log(error, 'err---->');
@@ -80,172 +86,126 @@ exports.IncidentReport = async (req, resp, next) => {
         next(error);
     }
 };
-// const { sendError } = require('../otp/error');
-// const ReportServices = require('../services/ReportServices');
-// const User = require('../model/UserModel');
-// const UserModel = require('../model/UserModel');
-// const service = require('../services/service');
-// const multer = require('multer');
-
-// //storage
-// const Storage = multer.diskStorage({
-//     destination:'upload',
-
-//     filename:(req, file, cb) => {
-//         cb(null, file.originalname);
-//     },
-// });
-
-// const upload = multer({
-//     storage: Storage
-// }).single('testImage')
-
-// exports.createReport = async (req, resp, next) => {
-//     try {
-//         const { email, location, severity, desc } = req.body;
-
-//         const user= await User.findOne({ email: email });
-//         if (!user) {
-//             return sendError(resp, "User doesn't exitst");
-//         }
-
-//         if(!severity ){
-//             return sendError(resp, "Please mention the severity");
-//         } 
-//         if( !desc) {
-//             return sendError(resp, 'Fill up the description');
-//         }
-
-//         if(!location){
-//             return sendError(resp, "Please enter the location");
-//         } 
-//         if(!req.file){
-//             return sendError(resp, "Image dosen't exist");
-//         } 
-//         const image = req.file.filename;
-//         const contentType = 'image/png';
-        
-
-//         let Report = await ReportServices.createReport(email, location, image, severity, desc, contentType);
-//         resp.json({ status: true, });
-//     } catch (error) {
-//         next(error);
-//     }
-// };
 
 
-// const { sendError } = require('../otp/error');
-// const ReportServices = require('../services/ReportServices');
-// const User = require('../model/UserModel');
-// const multer = require('multer');
+exports.getNearbyHospitals = async (req, resp, next) => {
+    try {
+        // Extract query parameters from the request
+        // const { location, radius, keyword, type } = req.query;
 
-// // Multer configuration
-// const Storage = multer.diskStorage({
-//     destination: 'upload',
-//     filename: (req, file, cb) => {
-//         cb(null, `${Date.now()}-${file.originalname}`);
-//     },
-// });
-// const upload = multer({ storage: Storage }).single('testImage'); 
+        // Ensure required parameters are provided
+        // if (!location) {
+        //     return sendError(resp, "Please provide the location");
+        // }
 
-// exports.createReport = async (req, resp, next) => {
-//     try {
-//         // Handle JSON data
-//         const { email, location, severity, desc } = req.body;
-//         const user = await User.findOne({ email: email });
-//         if (!user) {
-//             return sendError(resp, "User doesn't exist");
-//         }
+        // Construct the path for the API endpoint with query parameters
+        const path = `/nearbysearch/json?location=27.717245%2C85.323959&radius=1500&keyword=School&type=School`;
 
-//         if (!severity) {
-//             return sendError(resp, "Please mention the severity");
-//         } 
-//         if (!desc) {
-//             return sendError(resp, 'Fill up the description');
-//         }
+        // Options for the HTTP GET request
+        const options = {
+            method: 'GET',
+            hostname: 'map-places.p.rapidapi.com',
+            port: null,
+            path: path,
+            headers: {
+                'X-RapidAPI-Key': 'b0cef6cf54mshda03fe8a676295ep1c8383jsnc5b8ff8108d3', 
+                'X-RapidAPI-Host': 'map-places.p.rapidapi.com'
+            }
+        };
 
-//         if (!location) {
-//             return sendError(resp, "Please enter the location");
-//         } 
+    
+        const req = https.request(options, function (res) {
+            const chunks = [];
 
-//         // Handle file upload
-//         // upload(req, resp, async (err) => {
-//         //     if (err) {
-//         //         console.error('Error uploading file:', err);
-//         //         return sendError(resp, "Error uploading image");
-//         //     }
+            res.on('data', function (chunk) {
+                chunks.push(chunk);
+            });
+            res.on('end', function () {
+                const body = Buffer.concat(chunks); 
+                resp.json(JSON.parse(body.toString()));
+            });
+        });
 
-//         //     if (!req.file) {
-//         //         return sendError(resp, "Image doesn't exist");
-//         //     }
-//         //     const imageBuffer = req.file.buffer;
-//         //     const contentType = req.file.mimetype;
-
-//             // Call the service to create the report
-//             const report = await ReportServices.createReport({ email, location, imageBuffer, severity, desc, contentType });
-//             resp.json({ status: true });
-//         // });
-//     } catch (error) {
-//         next(error);
-//     }
-// };
+        req.end(); 
+    } catch (error) {
+        next(error); 
+    }
+};
 
 
-// const { sendError } = require('../utils/error');
-// const ReportServices = require('../services/ReportServices');
-// const User = require('../model/UserModel');
-// const cloudinary = require('cloudinary').v2;
 
-// // Configure Cloudinary (make sure to replace placeholders with your actual Cloudinary credentials)
-// cloudinary.config({
-//   cloud_name: 'dawfvl61t',
-//   api_key: '237111674384819',
-//   api_secret: 'IPQwVxBAuXjEW5no-RRgsQzI5LU'
-// });
 
-// exports.createReport = async (req, resp, next) => {
-//     try {
-//         const {image } = req.body;
-//         const contentType = req.headers['content-type'];
+exports.getAllReports = async (req, res, next) => {
+    try {
+        const reports = await ReportServices.getAllReports(null); 
+        res.json({ success: true, reports });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.approveReport = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+        const { comment } = req.body;
 
-//         // const user= await User.findOne(email);
-//         // if (!user) {
-//         //     return sendError(resp, "User doesn't exist");
-//         // }
+        const report = await ReportModel.findById(userId);
+        if (!report) {
+            return res.status(404).json({ success: false, message: 'Report not found' });
+        }
 
-//         // if(!location){
-//         //     return sendError(resp, "Please enter the location");
-//         // } 
-//         if(!image){
-//             return sendError(resp, "Image doesn't exist");
-//         } 
-//         // if(!severity ){
-//         //     return sendError(resp, "Please mention the severity");
-//         // } 
-//         // if( !desc) {
-//         //     return sendError(resp, 'Fill up the description');
-//         // }
+        await ReportModel.findByIdAndUpdate(userId, { status: 'approved' });
 
-//         // Upload image to Cloudinary
-//         const cloudinaryResponse = await uploadImageToCloudinary(image);
+    
+        const user = await User.findById(report.userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
 
-//         // Extract the secure URL of the uploaded image from Cloudinary response
-//         const imageUrl = cloudinaryResponse.secure_url;
 
-//         // Create report using ReportServices.createReport
-//         let Report = await ReportServices.createReport( imageUrl, contentType );
-//         resp.json({ status: true });
-//     } catch (error) {
-//         next(error);
-//     }
-// };
-// async function uploadImageToCloudinary(image) {
-//     try {
-//         const result = await cloudinary.uploader.upload(image);
-//         return result;
-//     } catch (error) {
-//         console.error('Error uploading image to Cloudinary:', error.message); // Log only the error message
-//         throw error; // Rethrow the error to be caught in the calling function
-//     }
-// }
+        const emailBody = `Your report has been approved. Comment: ${comment}`;
+        await sendMail(user.email, 'Report Approval', emailBody);
+        await mailTransport().sendMail({
+            from: 'infoReportARoad@gmail.com',
+            to: user.email,
+            subject: "Your Report has been approved!!!",
+            html: `<h1>Your report has been approved. Reason: ${comment}</h1>`
+        });
 
+        const notificationBody = `A report has been approved. Comment: ${comment}`;
+        await sendNotification('all', 'Report Approval', notificationBody);
+
+        res.json({ success: true, message: 'Report approved successfully' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.disapproveReport = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+        const { comment } = req.body;
+
+        await ReportModel.findByIdAndUpdate(userId, { status: 'disapproved' });
+
+        const report = await ReportModel.findById(userId);
+        const user = await UserModel.findById(report.userId);
+
+      
+        const emailBody = `Your report has been disapproved. Reason: ${comment}`;
+        await sendMail(user.email, 'Report Disapproval', emailBody);
+        await mailTransport().sendMail({
+            from: 'infoReportARoad@gmail.com',
+            to: user.email,
+            subject: "Your Report has been disapproved!!!",
+            html: `<h1>Your report has been disapproved. Reason: ${comment}</h1>`
+        });
+
+     
+        const notificationBody = `A report has been disapproved. Reason: ${comment}`;
+        await sendNotification('all', 'Report Disapproval', notificationBody);
+
+        res.json({ success: true, message: 'Report disapproved successfully' });
+    } catch (error) {
+        next(error);
+    }
+};

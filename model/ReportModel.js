@@ -21,7 +21,7 @@ const ReportSchema =  new Schema({
     },
     image:{
         type: String, 
-        required: true,
+        // required: true,
         unique: true
     },
     // contentType: {
@@ -37,9 +37,13 @@ const ReportSchema =  new Schema({
         type: String,
         required: true
     },
+    status: { // Add the new status field
+        type: String,
+        default: 'pending' // Set the default value to 'pending'
+    }
    
 
-});
+},{timestamps:true});
 
 const ReportModel = dbConnection.model('Report',ReportSchema);
 

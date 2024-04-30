@@ -52,9 +52,9 @@ exports.login = async ( req, resp, next) => {
 
         let tokenData = { _id: User._id, email: User.email, username: User.username };
         // const token = await UserService.generateToken(tokenData, "secretkey", '1hr');
-        const token = await service.generateToken(tokenData, "secretkey", '1hr');
+        const token = await service.generateAccessToken(tokenData, "secretkey", '1hr');
 
-        resp.status(200).json({ status: true, token: token })
+        resp.status(200).json({ status: true, sucess:"senddata", token: token })
 
 
     } catch (err) {

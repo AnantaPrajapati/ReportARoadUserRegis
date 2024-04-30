@@ -16,8 +16,8 @@ router.post('/resetPassword', UserControllers.resetPassword);
 router.get('/logout', UserControllers.logout);
 router.post('/verifyResetOtp', UserControllers.verifyResetOtp);
 
-router.get('/profile/:id', ProfileController.profile);
-router.post('/UpdateProfile/:id', ProfileController.updateProfile);
+router.get('/profile', ProfileController.profile);
+router.post('/UpdateProfile/', ProfileController.updateProfile);
 router.post('/ChangePassword/:id', ProfileController.ChangePassword);
 
 

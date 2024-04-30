@@ -5,8 +5,8 @@ const bcrypt = require('bcrypt');
 
 exports.profile = async (req, resp) => {
     try {
-        const {id} = req.params;
-        const user = await User.findById(id); 
+        const userId = req.query.userId;
+        const user = await User.findById(userId); 
         const {firstname, lastname , username, email} = user
         if (!user) {
             return sendError(resp, 'User not found');
@@ -21,14 +21,14 @@ exports.profile = async (req, resp) => {
 exports.updateProfile = async (req, resp) => {
     try {
         const { firstname, lastname, username } = req.body;
-        const { id } = req.params; 
+        const userId = req.query.userId;
        
         const existingUser = await User.findOne({ username });
-        if (existingUser && existingUser._id.toString() !== id) {
+        if (existingUser && existingUser._id.toString() !== userId) {
             return sendError(resp, 'Username already exists');
         }
         const updatedUser = await User.findOneAndUpdate(
-            { _id: id }, 
+            { _id: userId }, 
             { firstname, lastname, username },
             { new: true }
         );
