@@ -5,6 +5,8 @@ const User = require('../model/UserModel');
 const IncidentServices = require('../services/IncidentService');
 const https = require('https');
 const ReportModel = require('../model/ReportModel');
+const { mailTransport } = require('../utils/mail');
+// const {sendNotification}= require('../controller/ReportController');
 
 exports.createReport = async (req, resp, next) => {
     try {
@@ -39,7 +41,8 @@ exports.getReport = async (req, resp, next) => {
     try {
         
         const userId = req.query.userId;
-        let report = await ReportServices.getReport(userId, 'pending');
+        const statuses = ['pending', 'approved', 'disapproved'];
+        let report = await ReportServices.getReport(userId, statuses);
         resp.json({ status: true, success:report });
     } catch (error) {
         next(error);
@@ -135,77 +138,3 @@ exports.getNearbyHospitals = async (req, resp, next) => {
 
 
 
-exports.getAllReports = async (req, res, next) => {
-    try {
-        const reports = await ReportServices.getAllReports(null); 
-        res.json({ success: true, reports });
-    } catch (error) {
-        next(error);
-    }
-};
-exports.approveReport = async (req, res, next) => {
-    try {
-        const { userId } = req.params;
-        const { comment } = req.body;
-
-        const report = await ReportModel.findById(userId);
-        if (!report) {
-            return res.status(404).json({ success: false, message: 'Report not found' });
-        }
-
-        await ReportModel.findByIdAndUpdate(userId, { status: 'approved' });
-
-    
-        const user = await User.findById(report.userId);
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
-
-
-        const emailBody = `Your report has been approved. Comment: ${comment}`;
-        await sendMail(user.email, 'Report Approval', emailBody);
-        await mailTransport().sendMail({
-            from: 'infoReportARoad@gmail.com',
-            to: user.email,
-            subject: "Your Report has been approved!!!",
-            html: `<h1>Your report has been approved. Reason: ${comment}</h1>`
-        });
-
-        const notificationBody = `A report has been approved. Comment: ${comment}`;
-        await sendNotification('all', 'Report Approval', notificationBody);
-
-        res.json({ success: true, message: 'Report approved successfully' });
-    } catch (error) {
-        next(error);
-    }
-};
-
-exports.disapproveReport = async (req, res, next) => {
-    try {
-        const { userId } = req.params;
-        const { comment } = req.body;
-
-        await ReportModel.findByIdAndUpdate(userId, { status: 'disapproved' });
-
-        const report = await ReportModel.findById(userId);
-        const user = await UserModel.findById(report.userId);
-
-      
-        const emailBody = `Your report has been disapproved. Reason: ${comment}`;
-        await sendMail(user.email, 'Report Disapproval', emailBody);
-        await mailTransport().sendMail({
-            from: 'infoReportARoad@gmail.com',
-            to: user.email,
-            subject: "Your Report has been disapproved!!!",
-            html: `<h1>Your report has been disapproved. Reason: ${comment}</h1>`
-        });
-
-     
-        const notificationBody = `A report has been disapproved. Reason: ${comment}`;
-        await sendNotification('all', 'Report Disapproval', notificationBody);
-
-        res.json({ success: true, message: 'Report disapproved successfully' });
-    } catch (error) {
-        next(error);
-    }
-};

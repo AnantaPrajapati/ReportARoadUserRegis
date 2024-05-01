@@ -28,11 +28,10 @@ const UserSchema =  new Schema({
     email:{
         type: String,
         lowercase: true,
-        required: [true, "userName can't be empty"],
-        // @ts-ignore
+        required: [true, "email can't be empty"],
         match: [
             /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/,
-            "userName format is not correct",
+            "email format is not correct",
         ],
         unique: true,
     },
@@ -42,7 +41,7 @@ const UserSchema =  new Schema({
     },
     Cpassword:{
         type: String,
-        required: true 
+        required: [true, "password is required"],
     },
     verified:{
         type: Boolean,
