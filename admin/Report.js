@@ -30,7 +30,7 @@ exports.getApprovedReports = async (req, res, next) => {
 
 exports.approveReport = async (req, res, next) => {
     try {
-        const { userId } = req.body;
+        const userId = req.query.userId;
         const { comment } = req.body;
 
         const report = await ReportModel.findById(userId);
@@ -67,7 +67,7 @@ exports.approveReport = async (req, res, next) => {
 
 exports.disapproveReport = async (req, res, next) => {
     try {
-        const { userId } = req.body;
+        const userId = req.query.userId;
         const { comment } = req.body;
 
 

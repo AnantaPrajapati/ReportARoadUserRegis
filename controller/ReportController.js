@@ -49,6 +49,18 @@ exports.getReport = async (req, resp, next) => {
     }
 };
 
+exports.resolvedReport = async (req, resp, next) => {
+    try {
+        
+        const userId = req.query.userId;
+        const statuses = [ 'resolved'];
+        let report = await ReportServices.resolvedReport(userId, statuses);
+        resp.json({ status: true, success:report });
+    } catch (error) {
+        next(error);
+    }
+};
+
 
 exports.deleteReport =  async (req,res,next)=>{
     try {
@@ -138,3 +150,67 @@ exports.getNearbyHospitals = async (req, resp, next) => {
 
 
 
+// exports.ratingFeedback = async (req, resp, next) => {
+//     try {
+
+//         const { userId, reportId } = req.query; 
+        
+//         let {Rating, feedback } = req.body;
+
+//         Rating = parseInt(Rating);
+
+//         if (!userId || !reportId || !Rating || !feedback) {
+//             return resp.status(404).json({ success: false, message: 'UserId, rating, and feedback are required' });
+//         }
+
+//         const report = await ReportModel.findById(reportId);
+//         if (!report) {
+//             return resp.status(404).json({ success: false, message: 'Report not found' });
+//         }
+
+//         const user = await User.findById(userId);
+//         if (!user) {
+//             return resp.status(404).json({ success: false, message: 'User not found' });
+//         }
+
+       
+//         // const ratingFeedback = new ratingFeedback({
+//         //     userId,
+//         //     Rating,
+//         //     feedback
+//         // });
+
+//         let feed = await ReportServices.createRatingFeedback(userId, Rating, feedback );
+//         resp.status(201).json({ success: true, message: 'Rating and feedback submitted successfully' });
+//     } catch (error) {
+//         console.error('Error submitting rating and feedback:', error);
+//         resp.status(500).json({ success: false, message: 'Internal server error' });
+//     }
+// };
+
+
+const RatingFeedbackModel = require('../model/RatingFeedback');
+
+
+exports.ratingFeedback = async (req, res, next) => {
+    try {
+        const userId = req.query.userId;
+        const { rating, feedback } = req.body;
+
+        const report = await ReportModel.findById(userId);
+        if (!report) {
+            return res.status(404).json({ success: false, message: 'Report not found' });
+        }
+
+        const ratingFeedback = new RatingFeedbackModel({
+            userId: userId,
+            Rating: rating,
+            feedback: feedback
+        });
+        await ratingFeedback.save();
+
+        res.json({ success: true, message: 'Rating and feedback submitted successfully' });
+    } catch (error) {
+        next(error);
+    }
+};

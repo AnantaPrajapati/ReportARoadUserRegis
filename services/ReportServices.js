@@ -1,5 +1,6 @@
 // const { IncidentReport } = require('../controller/ReportController');
 // // const IncidentModel = require('../model/IncidentModel');
+const RatingFeedbackModel = require('../model/RatingFeedback');
 const ReportModel = require('../model/ReportModel');
 // const UserModel = require('../model/UserModel');
 
@@ -13,10 +14,22 @@ class ReportServices{
         const report = await ReportModel.find({userId, status })
         return report;
     }
+    static async resolvedReport(userId, status = 'resolved'){
+        const report = await ReportModel.find({userId, status })
+        return report;
+    }
     static async deleteReport(id){
         const deleted = await ReportModel.findByIdAndDelete({_id:id})
         return deleted;
    }
+//  static async createRatingFeedback(reportId, userId, rating, feedback) {
+//     const ratingFeedback = new RatingFeedbackModel({
+//         userId: userId,
+//         Rating: rating,
+//         feedback: feedback
+//     });
+//     return await ratingFeedback.save();
+// }
 
 
    //for admin
@@ -45,17 +58,3 @@ class ReportServices{
 
 
 module.exports = ReportServices;
-
-
-// const ReportModel = require('../model/ReportModel');
-
-// class ReportServices{
-
-//     static async createReport( image, contentType){
-//         const createReport = new ReportModel({image, contentType});
-//         return await createReport.save();
-
-//     }
-// }
-
-// module.exports = ReportServices;
