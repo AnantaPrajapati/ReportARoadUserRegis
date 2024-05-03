@@ -194,15 +194,26 @@ const RatingFeedbackModel = require('../model/RatingFeedback');
 
 exports.ratingFeedback = async (req, res, next) => {
     try {
+        const reportId  = req.query.reportId ;
         const userId = req.query.userId;
         const { rating, feedback } = req.body;
 
-        const report = await ReportModel.findById(userId);
+        if (rating < 0 || rating > 5) {
+            return res.status(400).json({ success: false, message: 'Rating must be between 0 and 5' });
+        }
+
+        const existingEntry  = await RatingFeedbackModel.findOne({ userId: userId, reportId: reportId });
+        if (existingEntry) {
+            return res.status(400).json({ success: false, message: 'You have already submitted a rating and feedback for this report' });
+        }
+
+        const report = await ReportModel.findById(reportId );
         if (!report) {
             return res.status(404).json({ success: false, message: 'Report not found' });
         }
 
         const ratingFeedback = new RatingFeedbackModel({
+            reportId: reportId ,
             userId: userId,
             Rating: rating,
             feedback: feedback

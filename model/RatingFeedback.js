@@ -4,10 +4,14 @@ const dbConnection = require('../config/dbConnection');
 const ReportModel = require('../model/ReportModel');
 
 const RatingFeedbackSchema = new Schema({
+    reportId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Report',
+    },
     userId: {
         type: Schema.Types.ObjectId,
         ref: 'User',
-        unique: true
+        required: true
     },
     Rating: {
         type: Number,
