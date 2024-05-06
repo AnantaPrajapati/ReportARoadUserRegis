@@ -2,6 +2,7 @@ const Profile = require('./UserControllers');
 const User = require('../model/UserModel');
 const { sendError } = require('../utils/error');
 const bcrypt = require('bcrypt');
+const UserModel = require('../model/UserModel');
 
 exports.profile = async (req, resp) => {
     try {
@@ -42,22 +43,32 @@ exports.updateProfile = async (req, resp) => {
 
 exports.ChangePassword = async (req, resp) => {
     try {
-        const { password, newPassword } = req.body;
-        const { id } = req.params;
-        const user = await User.findById(id);
-        
+      
+        const userId = req.query.userId;
+        const { Oldpassword, newPassword } = req.body;
+        const user = await UserModel.find({userId})
+    
         if (!user) {
             return sendError(resp, 'User not found');
         }
         const passwordMatch = await bcrypt.compare(password, user.password);
 
-        if (!passwordMatch) {
-            return sendError(resp, 'Current password incorrect');
+        if(!password || !Cpassword){
+            return sendError(resp, "Enter new password");
+        }
+        if(password !== Cpassword){
+            return sendError(resp, "Password do not match");
         }
         const salt = await bcrypt.genSalt(11);
-        const hashPass = await bcrypt.hash(newPassword, salt);
+        const hashPass = await bcrypt.hash(password, salt);
+        const Password = hashPass;
 
-        user.password = hashPass;
+        const updatedUser = await User.findOneAndUpdate(
+            { userId },
+            { password: newPassword , Cpassword: newPassword },
+            { new: true }
+        );
+
         await user.save();
 
         resp.json({ success: true, message: 'Password changed successfully' });

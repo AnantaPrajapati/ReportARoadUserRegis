@@ -18,6 +18,15 @@ exports.getAllReports = async (req, res, next) => {
     }
 };
 
+exports.getNews = async (req, res, next) => {
+    try {
+        const news = await ReportServices.getNews(null); 
+        res.json({ success: true, news });
+    } catch (error) {
+        sendError(error);
+    }
+};
+
 exports.getApprovedReports = async (req, res, next) => {
     try {
         const approvedReports = await ReportServices.getApprovedReports();
@@ -27,6 +36,35 @@ exports.getApprovedReports = async (req, res, next) => {
     }
 };
 
+
+exports.createNews = async (req, resp, next) => {
+    try {
+        const { title, location, image, desc } = req.body;
+
+        // const user= await User.findOne({ email: email });
+        // if (!user) {
+        //     return sendError(resp, "User doesn't exitst");
+        // }
+
+        if(!title){
+            return sendError(resp, "Please enter the location");
+        } 
+        if(!location){
+            return sendError(resp, "Please enter the location");
+        } 
+        if(!image){
+            return sendError(resp, "Image dosen't exist");
+        } 
+        if( !desc) {
+            return sendError(resp, 'Fill up the description');
+        }
+
+        let News = await ReportServices.createNews(title, location, image, desc);
+        resp.json({ status: true, });
+    } catch (error) {
+        next(error);
+    }
+};
 
 exports.approveReport = async (req, res, next) => {
     try {

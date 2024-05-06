@@ -17,33 +17,81 @@ exports.createReport = async (req, resp, next) => {
         //     return sendError(resp, "User doesn't exitst");
         // }
 
-        if(!location){
+        if (!location) {
             return sendError(resp, "Please enter the location");
-        } 
-        if(!image){
+        }
+        if (!image) {
             return sendError(resp, "Image dosen't exist");
-        } 
-        if(!severity ){
+        }
+        if (!severity) {
             return sendError(resp, "Please mention the severity");
-        } 
-        if( !desc) {
+        }
+        if (!desc) {
             return sendError(resp, 'Fill up the description');
         }
         const reportStatus = "pending";
 
-        let Report = await ReportServices.createReport(userId, location, image, severity, desc,reportStatus);
+        let Report = await ReportServices.createReport(userId, location, image, severity, desc, reportStatus);
         resp.json({ status: true, });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.IncidentReport = async (req, resp, next) => {
+    try {
+        const { userId, location, image, title, desc } = req.body;
+
+        // const user= await User.findOne({ email: email });
+        // if (!user) {
+        //     return sendError(resp, "User doesn't exitst");
+        // }
+
+        if (!location) {
+            return sendError(resp, "Please enter the location");
+        }
+        if (!image) {
+            return sendError(resp, "Image dosen't exist");
+        }
+        if (!title) {
+            return sendError(resp, "Please mention the severity");
+        }
+        if (!desc) {
+            return sendError(resp, 'Fill up the description');
+        }
+        const reportStatus = "pending";
+
+        let Report = await IncidentServices.createReport(userId, location, image, title, desc);
+        resp.json({ status: true, });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.getIncidentReport = async (req, resp, next) => {
+    try {
+
+        const userId = req.query.userId;
+        let report = await IncidentServices.getReport(userId);
+        resp.json({ status: true, success: report });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.getAllIncidentReport = async (req, res, next) => {
+
+    try {
+        const { location, latitude, longitude } = req.query;
+        const news = await ReportServices.getAllIncidentReport(location, latitude, longitude);
+        res.json({ success: true, news });
     } catch (error) {
         next(error);
     }
 };
 exports.getReport = async (req, resp, next) => {
     try {
-        
         const userId = req.query.userId;
         const statuses = ['pending', 'approved', 'disapproved'];
         let report = await ReportServices.getReport(userId, statuses);
-        resp.json({ status: true, success:report });
+        resp.json({ status: true, success: report });
     } catch (error) {
         next(error);
     }
@@ -51,56 +99,28 @@ exports.getReport = async (req, resp, next) => {
 
 exports.resolvedReport = async (req, resp, next) => {
     try {
-        
         const userId = req.query.userId;
-        const statuses = [ 'resolved'];
+        const statuses = ['resolved'];
         let report = await ReportServices.resolvedReport(userId, statuses);
-        resp.json({ status: true, success:report });
+        resp.json({ status: true, success: report });
     } catch (error) {
         next(error);
     }
 };
 
 
-exports.deleteReport =  async (req,res,next)=>{
+exports.deleteReport = async (req, res, next) => {
     try {
         console.log(req.query.id);
         const { id } = req.body;
         let deletedData = await ReportServices.deleteReport(id);
-        res.json({status: true,success:deletedData});
+        res.json({ status: true, success: deletedData });
     } catch (error) {
         console.log(error, 'err---->');
         next(error);
     }
 }
-exports.IncidentReport = async (req, resp, next) => {
-    try {
-        const { email, location, image, title, desc } = req.body;
 
-        const user= await User.findOne({ email: email });
-        if (!user) {
-            return sendError(resp, "User doesn't exitst");
-        }
-
-        if(!location){
-            return sendError(resp, "Please enter the location");
-        } 
-        if(!image){
-            return sendError(resp, "Image dosen't exist");
-        } 
-        if(!title ){
-            return sendError(resp, "Please mention the severity");
-        } 
-        if( !desc) {
-            return sendError(resp, 'Fill up the description');
-        }
-
-        let Report = await IncidentServices.createReport(email, location, image, title, desc);
-        resp.json({ status: true, });
-    } catch (error) {
-        next(error);
-    }
-};
 
 
 exports.getNearbyHospitals = async (req, resp, next) => {
@@ -123,12 +143,12 @@ exports.getNearbyHospitals = async (req, resp, next) => {
             port: null,
             path: path,
             headers: {
-                'X-RapidAPI-Key': 'b0cef6cf54mshda03fe8a676295ep1c8383jsnc5b8ff8108d3', 
+                'X-RapidAPI-Key': 'b0cef6cf54mshda03fe8a676295ep1c8383jsnc5b8ff8108d3',
                 'X-RapidAPI-Host': 'map-places.p.rapidapi.com'
             }
         };
 
-    
+
         const req = https.request(options, function (res) {
             const chunks = [];
 
@@ -136,14 +156,14 @@ exports.getNearbyHospitals = async (req, resp, next) => {
                 chunks.push(chunk);
             });
             res.on('end', function () {
-                const body = Buffer.concat(chunks); 
+                const body = Buffer.concat(chunks);
                 resp.json(JSON.parse(body.toString()));
             });
         });
 
-        req.end(); 
+        req.end();
     } catch (error) {
-        next(error); 
+        next(error);
     }
 };
 
@@ -154,7 +174,7 @@ exports.getNearbyHospitals = async (req, resp, next) => {
 //     try {
 
 //         const { userId, reportId } = req.query; 
-        
+
 //         let {Rating, feedback } = req.body;
 
 //         Rating = parseInt(Rating);
@@ -173,7 +193,7 @@ exports.getNearbyHospitals = async (req, resp, next) => {
 //             return resp.status(404).json({ success: false, message: 'User not found' });
 //         }
 
-       
+
 //         // const ratingFeedback = new ratingFeedback({
 //         //     userId,
 //         //     Rating,
@@ -194,7 +214,7 @@ const RatingFeedbackModel = require('../model/RatingFeedback');
 
 exports.ratingFeedback = async (req, res, next) => {
     try {
-        const reportId  = req.query.reportId ;
+        const reportId = req.query.reportId;
         const userId = req.query.userId;
         const { rating, feedback } = req.body;
 
@@ -202,18 +222,18 @@ exports.ratingFeedback = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Rating must be between 0 and 5' });
         }
 
-        const existingEntry  = await RatingFeedbackModel.findOne({ userId: userId, reportId: reportId });
+        const existingEntry = await RatingFeedbackModel.findOne({ userId: userId, reportId: reportId });
         if (existingEntry) {
             return res.status(400).json({ success: false, message: 'You have already submitted a rating and feedback for this report' });
         }
 
-        const report = await ReportModel.findById(reportId );
+        const report = await ReportModel.findById(reportId);
         if (!report) {
             return res.status(404).json({ success: false, message: 'Report not found' });
         }
 
         const ratingFeedback = new RatingFeedbackModel({
-            reportId: reportId ,
+            reportId: reportId,
             userId: userId,
             Rating: rating,
             feedback: feedback

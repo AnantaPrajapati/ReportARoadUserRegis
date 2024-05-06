@@ -9,11 +9,10 @@ const IncidentSchema =  new Schema({
     //     type: Schema.Types.ObjectId,
     //     ref:UserModel.modelName
     // },
-    email: {
-        type: String,
-        lowercase: true,
-        required: true
-      },
+    userId:{
+        type: Schema.Types.ObjectId,
+        ref:UserModel.modelName
+    },
     title:{
         type: String,
         required: true,
@@ -38,7 +37,7 @@ const IncidentSchema =  new Schema({
     },
    
 
-});
+},{timestamps:true});
 
 const IncidentModel = dbConnection.model('Incident',IncidentSchema);
 

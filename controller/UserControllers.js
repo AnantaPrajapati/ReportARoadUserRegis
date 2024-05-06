@@ -17,9 +17,10 @@ const crypto = require('crypto');
 exports.signup = async (req, resp, next) => {
     try {
         const { firstname, lastname, username, email, password, Cpassword } = req.body;
-
+        
+        const role = "User";
         // const successResp = await UserService.signupuser(firstname, lastname, username, email, password, Cpassword);
-        const successResp = await service.signupuser(firstname, lastname, username, email, password, Cpassword);
+        const successResp = await service.signupuser(firstname, lastname, username, email, password, Cpassword, role);
 
         resp.json({ status: true, Success: "User Signed in" });
     } catch (err) {
@@ -44,7 +45,7 @@ exports.login = async ( req, resp, next) => {
         if (!User.verified) {
             return sendError(resp, "Email is not verified");
         }
-
+        // const role = "User";
         const isPasswordMatch = await User.comparePassword(password);
         if (isPasswordMatch === false) {
             return sendError(resp, "Password doesn't match");
@@ -95,7 +96,7 @@ exports.verifyEmail = async (req, resp) => {
         resp.json({ status: true, email: user.email });
     } catch (error) {
         console.error("Error in verifyEmail:", error);
-        sendError(resp, "Internal server error: " + error.message); // Return detailed error message
+        sendError(resp, "Internal server error: " + error.message); 
     }
 };
 
@@ -108,14 +109,14 @@ exports.forgetPassword = async (req, resp) => {
         const user = await User.findOne({ email });
         if (!user) return sendError(resp, 'User not found');
 
-        // Generate a random OTP
+       
         const randomBytes = generateOTP();
         
-        // Create a new ResetOtp instance with owner and otp
+      
         const resetOtp = new ResetOtp({ email:email, otp: randomBytes });
         await resetOtp.save();
 
-        // Send email with the OTP
+      
         await mailTransport().sendMail({
             from: 'security@gmail.com',
             to: user.email,
@@ -146,7 +147,7 @@ exports.verifyResetOtp = async (req, resp) => {
             return sendError(resp, "OTP record not found");
         }
 
-        // Check if OTP is expired
+      
         if (otpRecord.expiresAt < new Date()) {
             return sendError(resp, "OTP has expired. Please request a new one.");
         }
@@ -157,7 +158,7 @@ exports.verifyResetOtp = async (req, resp) => {
         }
         // await user.save();
 
-        // Delete OTP record
+    
         await otpRecord.deleteOne();
 
         resp.json({ status: true, email: user.email });

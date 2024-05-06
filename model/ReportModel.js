@@ -37,9 +37,9 @@ const ReportSchema =  new Schema({
         type: String,
         required: true
     },
-    status: { // Add the new status field
+    status: { 
         type: String,
-        default: 'pending' // Set the default value to 'pending'
+        default: 'pending' 
     }
    
 

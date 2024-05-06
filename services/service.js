@@ -6,10 +6,10 @@ const { sendError } = require('../utils/error');
 const { isValidObjectId } = require('mongoose');
 
 class service{
-   static async signupuser(firstname, lastname, username, email, password, Cpassword){
+   static async signupuser(firstname, lastname, username, email, password, Cpassword, role){
       try{
-          const createUser = new UserModel({firstname, lastname, username, email, password, Cpassword});
-         
+          const createUser = new UserModel({firstname, lastname, username, email, password, Cpassword, role});
+
           const Otp = generateOTP()
           const VerificationOTP = new VerificationOtp({
             email: createUser.email,
