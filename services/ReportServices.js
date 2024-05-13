@@ -4,12 +4,14 @@ const RatingFeedbackModel = require('../model/RatingFeedback');
 const ReportModel = require('../model/ReportModel');
 const NewsModel = require('../model/NewsModel');
 const IncidentModel = require('../model/IncidentModel');
+const IncidentService = require('../services/IncidentService'); // Adjust the path as needed
+
 // const UserModel = require('../model/UserModel');
 
 class ReportServices{
 
-    static async createReport(userId, location, image, severity, desc, status){
-        const createReport = new ReportModel({userId, location, image, severity, desc, status});
+    static async createReport(userId, location, images, severity, desc, status){
+        const createReport = new ReportModel({userId, location, images, severity, desc, status});
         return await createReport.save();
     }
     static async getReport(userId, status = 'pending'){
@@ -24,70 +26,60 @@ class ReportServices{
         const deleted = await ReportModel.findByIdAndDelete({_id:id})
         return deleted;
    }
+   static async getReportHistory(userId) {
+    const reportQuery = userId ? { userId } : {};
+    const incidentQuery = userId ? { userId } : {};
+
+    const reports = await ReportModel.find(reportQuery).select('-_id').lean();
+    const incidents = await IncidentModel.find(incidentQuery).select('-_id').lean();
+    reports.forEach(report => {
+        report.modelSection = 'Report';
+    });
+
+    incidents.forEach(incident => {
+        incident.modelSection = 'Incident';
+    });
+
+    return { reports, incidents };
+}
 
 
    
-   static async getAllIncidentReport(location, latitude, longitude) {
-    // Log the received latitude and longitude
-    console.log('Received Latitude:', latitude);
-    console.log('Received Longitude:', longitude);
+static async getReportsNearLocation(latitude, longitude) {
+    try {
+      const radius = 5; // Radius in kilometers
 
-    // Convert latitude and longitude to numbers
-    const userLatitude = parseFloat(latitude);
-    const userLongitude = parseFloat(longitude);
+      // Fetch all incident reports
+      const allReports = await IncidentModel.find({}, 'location');
 
-    if (isNaN(userLatitude) || isNaN(userLongitude)) {
-        throw new Error('Invalid latitude or longitude values');
-    }
+      console.log(latitude);
+      console.log(longitude);
 
-    // Log the parsed latitude and longitude
-    console.log('Parsed Latitude:', userLatitude);
-    console.log('Parsed Longitude:', userLongitude);
+      // Filter reports within the specified radius of the user's location
+      const reportsWithinRadius = allReports.filter(report => {
+        // Extract latitude and longitude from the location string using regular expressions
+        const locationRegex = /\(([^,]+),\s*([^)]+)\)/;
+        const match = report.location.match(locationRegex);
+        if (match && match.length >= 3) {
+          const reportLatitude = parseFloat(match[1]);
+          const reportLongitude = parseFloat(match[2]);
 
-    // Define the radius within which to search for incident reports (in kilometers)
-    const radius = 5; // Change this value as needed
-
-    // Calculate the bounding box for the search area
-    const earthRadius = 6371; // Earth radius in kilometers
-    const latDelta = radius / earthRadius;
-    const lonDelta = radius / (earthRadius * Math.cos((userLatitude * Math.PI) / 180));
-
-    // Log the calculated latitude and longitude deltas
-    console.log('Latitude Delta:', latDelta);
-    console.log('Longitude Delta:', lonDelta);
-
-    // Extract latitude and longitude values from the location string
-    const locationRegex = /\(([^,]+),\s*([^)]+)\)/;
-    const match = location.match(locationRegex);
-    if (!match || match.length < 3) {
-        throw new Error('Invalid location format');
-    }
-    const reportLatitude = parseFloat(match[1]);
-    const reportLongitude = parseFloat(match[2]);
-
-    // Log the extracted latitude and longitude values
-    console.log('Report Latitude:', reportLatitude);
-    console.log('Report Longitude:', reportLongitude);
-
-    // Define the bounding box coordinates
-    const minLat = userLatitude - latDelta;
-    const maxLat = userLatitude + latDelta;
-    const minLon = userLongitude - lonDelta;
-    const maxLon = userLongitude + lonDelta;
-
-    // Construct the query to find incident reports within the bounding box
-    const query = {
-        location: {
-            $geoWithin: {
-                $box: [[minLon, minLat], [maxLon, maxLat]]
-            }
+          // Calculate distance between user's location and report's location using Haversine formula
+          const distance = IncidentService.calculateDistance(latitude, longitude, reportLatitude, reportLongitude);
+          
+          // Check if the distance is within the radius
+          return distance <= radius;
+        } else {
+          // Handle case where location format is invalid
+          return false;
         }
-    };
+      });
 
-    // Query the database to find incident reports within the bounding box
-    const news = await IncidentModel.find(query);
-
-    return news;
+      return reportsWithinRadius;
+    } catch (error) {
+      console.error('Error fetching incident reports:', error);
+      throw new Error('Failed to fetch incident reports');
+    }
 }
 
 //  static async createRatingFeedback(reportId, userId, rating, feedback) {
@@ -132,6 +124,14 @@ class ReportServices{
         const news = await NewsModel.find(query);
         return news;
     }
+//     static async govReport( city ){
+//         try {
+//             const reports = await Report.find({ city });
+//             return reports;
+//         } catch (error) {
+//             throw error;
+//         }
+// }
 }
 
 module.exports = ReportServices;

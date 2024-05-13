@@ -6,6 +6,8 @@ const IncidentServices = require('../services/IncidentService');
 const https = require('https');
 const ReportModel = require('../model/ReportModel');
 const { mailTransport } = require('../utils/mail');
+const UserModel = require('../model/UserModel');
+const IncidentModel = require('../model/IncidentModel');
 
 
 
@@ -18,14 +20,6 @@ exports.getAllReports = async (req, res, next) => {
     }
 };
 
-exports.getNews = async (req, res, next) => {
-    try {
-        const news = await ReportServices.getNews(null); 
-        res.json({ success: true, news });
-    } catch (error) {
-        sendError(error);
-    }
-};
 
 exports.getApprovedReports = async (req, res, next) => {
     try {
@@ -65,6 +59,25 @@ exports.createNews = async (req, resp, next) => {
         next(error);
     }
 };
+
+// exports.govReport = async (req, resp, next) => {
+//     try {
+//         const userId = req.query.userId;
+
+//         const user = await UserModel.findById(userId);
+
+//         if (user.role === 'government') {
+//             const city = user.city;
+//             const reports = await ReportServices.govReport(city);
+
+//             resp.json({ status: true, success: reports });
+//         } else {
+//             resp.status(403).json({ status: false, error: "Unauthorized access" });
+//         }
+//     } catch (error) {
+//         next(error);
+//     }
+// };
 
 exports.approveReport = async (req, res, next) => {
     try {
@@ -156,7 +169,7 @@ async function sendNotificationToAll(title, body) {
 
 exports.updateReport = async (req, resp, next) => {
     try {
-        const { _id, userId, location, image, severity, desc, status } = req.body;
+        const { _id, userId, location, images,  desc, status } = req.body;
 
         if (!_id || !userId) {
             return sendError(resp, "reportID and userId are required");
@@ -178,9 +191,7 @@ exports.updateReport = async (req, resp, next) => {
             const imageUrl = await uploadImage(req.file.path);
             existingReport.image = imageUrl;
           }
-        if (severity) {
-            existingReport.severity = severity;
-        }
+     
         if (desc) {
             existingReport.desc = desc;
         }
@@ -193,3 +204,89 @@ exports.updateReport = async (req, resp, next) => {
         next(error);
     }
 };
+
+exports.notifyUser = async (req, res, next) => {
+    try {
+        const userId = req.query.userId;
+        const { comment, imageUrl } = req.body;
+
+        const report = await IncidentModel.findById(userId);
+        if (!report) {
+            return res.status(404).json({ success: false, message: 'Report not found' });
+        }
+
+        const user = await User.findById(report.userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        let incidentMessage;
+        let subject;
+        switch(report.title) {
+            case 'Accident':
+                incidentMessage = 'There has been an accident reported in your area.';
+                subject = '';
+                break;
+            case 'Burglary':
+                incidentMessage = 'Your stolen item has been found please come to nearby lost and found!!!';
+                subject = '';
+                break;
+            case 'Traffic Violation':
+                incidentMessage = 'A traffic violation has been reported in your area.';
+                subject = '';
+                break;
+            default:
+                incidentMessage = 'An incident has been reported in your area.';
+                subject = '';
+        }
+
+        const emailBody = `${incidentMessage} Comment: ${comment}`;
+        const attachments = [{
+            filename: 'image.jpg',
+            path: imageUrl
+        }];
+        const htmlResponse = `<h1>${incidentMessage}</h1><p>Reason: ${comment}</p>`;
+        
+        await mailTransport().sendMail({
+            from: 'infoReportARoad@gmail.com',
+            to: user.email,
+            subject: subject,
+            html: htmlResponse
+        });
+
+        res.json({ success: true, message: 'Report approved successfully' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+exports.DeleteUser = async (req, resp) => {
+    try {
+        const _id = req.query.userId;
+        const { comment } = req.body;
+
+        if (!_id) {
+            return resp.status(400).json({ success: false, message: 'User ID not provided' });
+        }
+        const user = await User.findById(_id);
+        if (!user) {
+            return resp.status(404).json({ success: false, message: 'User not found' });
+        }
+      
+        const deleteUser = await User.findByIdAndDelete({ _id });
+        const emailBody = `Your account has been deleted. Reason: ${comment}`;
+        // await sendMail(user.email, 'Report Disapproval', emailBody);
+        await mailTransport().sendMail({
+            from: 'infoReportARoad@gmail.com',
+            to: user.email,
+            subject: "Account deletion",
+            html: `<h1>Your account has been deleted. Reason: ${comment}</h1>`
+        });
+        resp.json({ success: true, message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Error in deleting account:', error);
+        resp.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+    }
+};
+

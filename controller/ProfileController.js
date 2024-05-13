@@ -18,6 +18,25 @@ exports.profile = async (req, resp) => {
         sendError(resp, 'Internal server error: ' + error.message);
     }
 };
+exports.deleteProfile = async (req, resp) => {
+    try {
+        const userId = req.query.userId;
+        const { email } = req.body;
+
+        const user = await UserModel.findById(userId);  
+        if (!user) {
+            return sendError(resp, 'User not found');
+        }
+        const User = await UserModel.checkUser(email);
+        if (!User) {
+            return sendError(resp, "E-mail is invalid !!");
+        }
+        resp.send({firstName: firstname, lastName: lastname, Username: username, Email:email});
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        sendError(resp, 'Internal server error: ' + error.message);
+    }
+};
 
 exports.updateProfile = async (req, resp) => {
     try {
@@ -42,16 +61,13 @@ exports.updateProfile = async (req, resp) => {
 };
 
 exports.ChangePassword = async (req, resp) => {
+   
     try {
-      
-        const userId = req.query.userId;
-        const { Oldpassword, newPassword } = req.body;
-        const user = await UserModel.find({userId})
-    
-        if (!user) {
-            return sendError(resp, 'User not found');
-        }
-        const passwordMatch = await bcrypt.compare(password, user.password);
+        const email = req.query.email;
+        const {  password, Cpassword } = req.body;
+       
+        const user = await User.findOne({ email });
+        if (!user) return sendError(resp, 'User not found');
 
         if(!password || !Cpassword){
             return sendError(resp, "Enter new password");
@@ -61,22 +77,46 @@ exports.ChangePassword = async (req, resp) => {
         }
         const salt = await bcrypt.genSalt(11);
         const hashPass = await bcrypt.hash(password, salt);
-        const Password = hashPass;
+        const newPassword = hashPass;
 
         const updatedUser = await User.findOneAndUpdate(
-            { userId },
+            { email },
             { password: newPassword , Cpassword: newPassword },
             { new: true }
         );
 
-        await user.save();
-
-        resp.json({ success: true, message: 'Password changed successfully' });
+        resp.json({ success: true, message: 'Password reset successfully' });
     } catch (error) {
-        console.error('Error updating user password:', error);
-        return sendError(resp, 'Internal server error: ' + error.message);
+        console.error('Error in resetting password:', error);
+        sendError(resp, 'Internal server error: ' + error.message);
     }
 };
+exports.DeleteAccount = async (req, resp) => {
+    try {
+        const userId = req.query.userId;
+        const { email } = req.body;
+
+        if (!userId) {
+            return resp.status(400).json({ success: false, message: 'User ID not provided' });
+        }
+        const user = await User.findById(userId);
+        if (!user) {
+            return resp.status(404).json({ success: false, message: 'User not found' });
+        }
+        if (user.email !== email) {
+            return resp.status(400).json({ success: false, message: 'Email does not match the logged-in user' });
+        }
+        const deleteUser = await User.findOneAndDelete({ email });
+
+        resp.json({ success: true, message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Error in deleting account:', error);
+        resp.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+    }
+};
+
+
+
 
 
 // exports.changeEmail = async (req, resp) => {

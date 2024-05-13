@@ -45,7 +45,10 @@ const UserSchema =  new Schema({
     },
     role:{
         type: String,
-        default: 'user',
+        
+    },
+    city:{
+        type: String,
     },
     verified:{
         type: Boolean,

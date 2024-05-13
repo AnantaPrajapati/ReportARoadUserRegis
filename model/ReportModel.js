@@ -19,11 +19,10 @@ const ReportSchema =  new Schema({
         type: String,
         required: true
     },
-    image:{
-        type: String, 
-        // required: true,
-        unique: true
-    },
+    images: [{
+        type: String,
+        required: true,
+    }],
     // contentType: {
     //     type: String,
     //     // required: true

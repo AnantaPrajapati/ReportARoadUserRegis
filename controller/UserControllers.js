@@ -16,11 +16,11 @@ const crypto = require('crypto');
 
 exports.signup = async (req, resp, next) => {
     try {
-        const { firstname, lastname, username, email, password, Cpassword } = req.body;
+        const { firstname, lastname, username, email, password, Cpassword, city} = req.body;
         
         const role = "User";
         // const successResp = await UserService.signupuser(firstname, lastname, username, email, password, Cpassword);
-        const successResp = await service.signupuser(firstname, lastname, username, email, password, Cpassword, role);
+        const successResp = await service.signupuser(firstname, lastname, username, email, password, Cpassword, role, city);
 
         resp.json({ status: true, Success: "User Signed in" });
     } catch (err) {
@@ -41,7 +41,6 @@ exports.login = async ( req, resp, next) => {
             return sendError(resp, "User doesn't exitst");
         }
 
-        // Check if the user's email is verified
         if (!User.verified) {
             return sendError(resp, "Email is not verified");
         }
@@ -52,7 +51,6 @@ exports.login = async ( req, resp, next) => {
         }
 
         let tokenData = { _id: User._id, email: User.email, username: User.username };
-        console.log("Token Data:", tokenData);
         // const token = await UserService.generateToken(tokenData, "secretkey", '1hr');
         const token = await service.generateAccessToken(tokenData, "secretkey", '1hr');
 
@@ -69,7 +67,7 @@ exports.verifyEmail = async (req, resp) => {
         const { email, Otp } = req.body;
         if (!email || !Otp.trim()) return sendError(resp, 'Invalid request, missing parameters');
 
-        const user = await User.findOne({ email }); // Find user by email
+        const user = await User.findOne({ email }); 
         if (!user) return sendError(resp, 'User not found');
 
         if (user.verified) return sendError(resp, "This account is already verified");

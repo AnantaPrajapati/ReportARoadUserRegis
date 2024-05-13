@@ -24,7 +24,7 @@ const IncidentSchema =  new Schema({
     image:{
         type: String, 
         required: true,
-        unique: true
+        // unique: true
     },
     contentType: {
         type: String,

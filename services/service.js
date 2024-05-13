@@ -1,17 +1,17 @@
 const UserModel = require('../model/UserModel');
-const VerificationOtp = require('../model/VerificationOtp');
+const VerificationOtpModel = require('../model/VerificationOtp');
 const jwt = require('jsonwebtoken');
 const {generateOTP, mailTransport } = require('../utils/mail');
 const { sendError } = require('../utils/error');
 const { isValidObjectId } = require('mongoose');
 
 class service{
-   static async signupuser(firstname, lastname, username, email, password, Cpassword, role){
+   static async signupuser(firstname, lastname, username, email, password, Cpassword, role, city ){
       try{
-          const createUser = new UserModel({firstname, lastname, username, email, password, Cpassword, role});
+          const createUser = new UserModel({firstname, lastname, username, email, password, Cpassword, role, city});
 
           const Otp = generateOTP()
-          const VerificationOTP = new VerificationOtp({
+          const VerificationOTP = new VerificationOtpModel({
             email: createUser.email,
             otp: Otp
  

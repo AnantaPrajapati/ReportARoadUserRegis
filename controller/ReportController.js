@@ -6,11 +6,12 @@ const IncidentServices = require('../services/IncidentService');
 const https = require('https');
 const ReportModel = require('../model/ReportModel');
 const { mailTransport } = require('../utils/mail');
+const RatingFeedbackModel = require('../model/RatingFeedback');
 // const {sendNotification}= require('../controller/ReportController');
 
 exports.createReport = async (req, resp, next) => {
     try {
-        const { userId, location, image, severity, desc } = req.body;
+        const { userId, location, images, severity, desc } = req.body;
 
         // const user= await User.findOne({ email: email });
         // if (!user) {
@@ -20,8 +21,8 @@ exports.createReport = async (req, resp, next) => {
         if (!location) {
             return sendError(resp, "Please enter the location");
         }
-        if (!image) {
-            return sendError(resp, "Image dosen't exist");
+        if (!images || images.length === 0) {
+            return sendError(resp, "Please upload at least one image");
         }
         if (!severity) {
             return sendError(resp, "Please mention the severity");
@@ -31,7 +32,7 @@ exports.createReport = async (req, resp, next) => {
         }
         const reportStatus = "pending";
 
-        let Report = await ReportServices.createReport(userId, location, image, severity, desc, reportStatus);
+        let Report = await ReportServices.createReport(userId, location, images, severity, desc, reportStatus);
         resp.json({ status: true, });
     } catch (error) {
         next(error);
@@ -68,9 +69,7 @@ exports.IncidentReport = async (req, resp, next) => {
 };
 exports.getIncidentReport = async (req, resp, next) => {
     try {
-
-        const userId = req.query.userId;
-        let report = await IncidentServices.getReport(userId);
+        let report = await IncidentServices.getIncidentReport(null);
         resp.json({ status: true, success: report });
     } catch (error) {
         next(error);
@@ -80,7 +79,8 @@ exports.getAllIncidentReport = async (req, res, next) => {
 
     try {
         const { location, latitude, longitude } = req.query;
-        const news = await ReportServices.getAllIncidentReport(location, latitude, longitude);
+        const news = await ReportServices.getReportsNearLocation(location, latitude, longitude);
+        console.log(location);
         res.json({ success: true, news });
     } catch (error) {
         next(error);
@@ -96,7 +96,18 @@ exports.getReport = async (req, resp, next) => {
         next(error);
     }
 };
-
+exports.getReportHistory = async (req, res, next) => {
+    try {
+        const userId = req.query.userId;
+        const reports = await ReportServices.getReportHistory(userId); 
+        if (reports && reports.length === 0) {
+            return res.status(404).json({ success: false, error: "User has not reported any incidents." });
+        }
+        res.json({ success: true, reports });
+    } catch (error) {
+        sendError(error);
+    }
+};
 exports.resolvedReport = async (req, resp, next) => {
     try {
         const userId = req.query.userId;
@@ -121,96 +132,14 @@ exports.deleteReport = async (req, res, next) => {
     }
 }
 
-
-
-exports.getNearbyHospitals = async (req, resp, next) => {
+exports.getNews = async (req, res, next) => {
     try {
-        // Extract query parameters from the request
-        // const { location, radius, keyword, type } = req.query;
-
-        // Ensure required parameters are provided
-        // if (!location) {
-        //     return sendError(resp, "Please provide the location");
-        // }
-
-        // Construct the path for the API endpoint with query parameters
-        const path = `/nearbysearch/json?location=27.717245%2C85.323959&radius=1500&keyword=School&type=School`;
-
-        // Options for the HTTP GET request
-        const options = {
-            method: 'GET',
-            hostname: 'map-places.p.rapidapi.com',
-            port: null,
-            path: path,
-            headers: {
-                'X-RapidAPI-Key': 'b0cef6cf54mshda03fe8a676295ep1c8383jsnc5b8ff8108d3',
-                'X-RapidAPI-Host': 'map-places.p.rapidapi.com'
-            }
-        };
-
-
-        const req = https.request(options, function (res) {
-            const chunks = [];
-
-            res.on('data', function (chunk) {
-                chunks.push(chunk);
-            });
-            res.on('end', function () {
-                const body = Buffer.concat(chunks);
-                resp.json(JSON.parse(body.toString()));
-            });
-        });
-
-        req.end();
+        const news = await ReportServices.getNews(null); 
+        res.json({ success: true, news });
     } catch (error) {
-        next(error);
+        sendError(error);
     }
 };
-
-
-
-
-// exports.ratingFeedback = async (req, resp, next) => {
-//     try {
-
-//         const { userId, reportId } = req.query; 
-
-//         let {Rating, feedback } = req.body;
-
-//         Rating = parseInt(Rating);
-
-//         if (!userId || !reportId || !Rating || !feedback) {
-//             return resp.status(404).json({ success: false, message: 'UserId, rating, and feedback are required' });
-//         }
-
-//         const report = await ReportModel.findById(reportId);
-//         if (!report) {
-//             return resp.status(404).json({ success: false, message: 'Report not found' });
-//         }
-
-//         const user = await User.findById(userId);
-//         if (!user) {
-//             return resp.status(404).json({ success: false, message: 'User not found' });
-//         }
-
-
-//         // const ratingFeedback = new ratingFeedback({
-//         //     userId,
-//         //     Rating,
-//         //     feedback
-//         // });
-
-//         let feed = await ReportServices.createRatingFeedback(userId, Rating, feedback );
-//         resp.status(201).json({ success: true, message: 'Rating and feedback submitted successfully' });
-//     } catch (error) {
-//         console.error('Error submitting rating and feedback:', error);
-//         resp.status(500).json({ success: false, message: 'Internal server error' });
-//     }
-// };
-
-
-const RatingFeedbackModel = require('../model/RatingFeedback');
-
 
 exports.ratingFeedback = async (req, res, next) => {
     try {
