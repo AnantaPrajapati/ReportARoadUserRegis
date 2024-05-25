@@ -3,7 +3,8 @@ const express = require('express');
 const app = express();
 const UserRoutes = require('./routes/UserRoutes');
 const cors = require('cors');
-const ReportRoute = require('./routes/ReportRoute')
+const ReportRoute = require('./routes/ReportRoute');
+const notificationRoute = require('./routes/notifcationRoute');
 // const { createProxyMiddleware } = require('http-proxy-middleware');
 
 app.use(cors());
@@ -12,6 +13,7 @@ app.use(bodyParser.json());
 
 app.use('/', UserRoutes);
 app.use('/', ReportRoute);
+app.use('/', notificationRoute);
 // app.use('/directions', createProxyMiddleware({
 //     target: 'https://maps.googleapis.com/maps/api',
 //     changeOrigin: true,

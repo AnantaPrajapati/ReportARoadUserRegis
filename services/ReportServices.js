@@ -5,6 +5,8 @@ const ReportModel = require('../model/ReportModel');
 const NewsModel = require('../model/NewsModel');
 const IncidentModel = require('../model/IncidentModel');
 const IncidentService = require('../services/IncidentService'); // Adjust the path as needed
+const UserModel = require('../model/UserModel');
+
 
 // const UserModel = require('../model/UserModel');
 
@@ -26,6 +28,14 @@ class ReportServices{
         const deleted = await ReportModel.findByIdAndDelete({_id:id})
         return deleted;
    }
+   static async deleteIncidentReport(id){
+    const deleted = await IncidentModel.findByIdAndDelete({_id:id})
+    return deleted;
+}
+   static async deleteNews(id){
+    const deleted = await NewsModel.findByIdAndDelete({_id:id})
+    return deleted;
+}
    static async getReportHistory(userId) {
     const reportQuery = userId ? { userId } : {};
     const incidentQuery = userId ? { userId } : {};
@@ -47,30 +57,27 @@ class ReportServices{
    
 static async getReportsNearLocation(latitude, longitude) {
     try {
-      const radius = 5; // Radius in kilometers
+      const radius = 5; 
 
-      // Fetch all incident reports
       const allReports = await IncidentModel.find({}, 'location');
 
       console.log(latitude);
       console.log(longitude);
 
-      // Filter reports within the specified radius of the user's location
       const reportsWithinRadius = allReports.filter(report => {
-        // Extract latitude and longitude from the location string using regular expressions
         const locationRegex = /\(([^,]+),\s*([^)]+)\)/;
         const match = report.location.match(locationRegex);
         if (match && match.length >= 3) {
           const reportLatitude = parseFloat(match[1]);
           const reportLongitude = parseFloat(match[2]);
 
-          // Calculate distance between user's location and report's location using Haversine formula
+       
           const distance = IncidentService.calculateDistance(latitude, longitude, reportLatitude, reportLongitude);
           
-          // Check if the distance is within the radius
+   
           return distance <= radius;
         } else {
-          // Handle case where location format is invalid
+
           return false;
         }
       });
@@ -111,6 +118,11 @@ static async getReportsNearLocation(latitude, longitude) {
         const query = userId ? { userId } : {};
         const reports = await ReportModel.find(userId, status);
         return reports;
+    }
+    static async sendAllNews(userId) {
+        const query = userId ? { userId } : {};
+        const users = await UserModel.find(query);
+        return users;
     }
 
 

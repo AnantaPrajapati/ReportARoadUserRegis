@@ -1,30 +1,30 @@
-const Notification = require('./notificationModel');
 
-async function createNotification(userId, message, relatedOrderId, actionType, isRead) {
-    const newNotification = new Notification({
+const notificationModel = require('../model/notificationModel');
+
+async function createNotification(userId, message, actionType, isRead) {
+    const newNotification = new notificationModel({
         userId,
         message,
         isRead,
-        relatedOrderId,
         actionType
     });
     return await newNotification.save();
 }
 
 async function getNotifications(userId) {
-    return await Notification.find({ userId });
+    return await notificationModel.find({ userId });
 }
 
 async function markAsRead(notificationId) {
-    return await Notification.findByIdAndUpdate(notificationId, { isRead: true });
+    return await notificationModel.findByIdAndUpdate(notificationId, { isRead: true });
 }
 
 async function deleteNotification(notificationId) {
-    return await Notification.findByIdAndDelete(notificationId);
+    return await notificationModel.findByIdAndDelete(notificationId);
 }
 
 async function getNotificationCount(userId) {
-    return await Notification.countDocuments({ userId });
+    return await notificationModel.countDocuments({ userId });
 }
 
 module.exports = {

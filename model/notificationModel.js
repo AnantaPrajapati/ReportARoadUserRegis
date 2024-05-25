@@ -1,6 +1,8 @@
-const mongoose = require('mongoose');
+const mongoose =require('mongoose');
+const dbConnection = require('../config/dbConnection');
+const{Schema} = mongoose;
 
-const notificationSchema = new mongoose.Schema({
+const notificationSchema = new Schema({
     userId: String,
     message: String,
     timestamp: {
@@ -8,10 +10,9 @@ const notificationSchema = new mongoose.Schema({
         default: Date.now
     },
     isRead: Boolean,
-    relatedOrderId: String,
     actionType: String
 });
 
-const Notification = mongoose.model('Notification', notificationSchema);
+const Notification = dbConnection.model('Notification', notificationSchema);
 
 module.exports = Notification;

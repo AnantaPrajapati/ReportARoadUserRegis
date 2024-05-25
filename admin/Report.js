@@ -34,12 +34,6 @@ exports.getApprovedReports = async (req, res, next) => {
 exports.createNews = async (req, resp, next) => {
     try {
         const { title, location, image, desc } = req.body;
-
-        // const user= await User.findOne({ email: email });
-        // if (!user) {
-        //     return sendError(resp, "User doesn't exitst");
-        // }
-
         if(!title){
             return sendError(resp, "Please enter the location");
         } 
@@ -54,7 +48,25 @@ exports.createNews = async (req, resp, next) => {
         }
 
         let News = await ReportServices.createNews(title, location, image, desc);
-        resp.json({ status: true, });
+        // let users = await UserModel.find({});
+        let users = await ReportServices.sendAllNews(null); 
+    
+        for (let user of users) {
+            try {
+                await mailTransport().sendMail({
+                    from: 'infoReportARoad@gmail.com',
+                    to: user.email,
+                    subject: "New News Report Published",
+                    html: `<h1>A new news report has been published</h1><p>Title: ${title}</p><p>Description: ${desc}</p><p>Location: ${location}</p>`
+                });
+            } catch (error) {
+                console.error(`Failed to send email to ${user.email}: ${error.message}`);
+            }
+        }
+
+        resp.json({ status: true, news: News});
+        
+        
     } catch (error) {
         next(error);
     }
@@ -141,10 +153,8 @@ exports.disapproveReport = async (req, res, next) => {
             html: `<h1>Your report has been disapproved. Reason: ${comment}</h1>`
         });
 
-     
-        // const notificationBody = `A report has been disapproved. Reason: ${comment}`;
-        // await sendNotificationToAll('all', 'Report Disapproval', notificationBody);
-
+        await IncidentModel.findByIdAndDelete(userId);
+        
         res.json({ success: true, message: 'Report disapproved successfully' });
     } catch (error) {
         next(error);
@@ -167,57 +177,59 @@ async function sendNotificationToAll(title, body) {
 }
 
 
-exports.updateReport = async (req, resp, next) => {
+exports.updateReport = async (req, res) => {
     try {
-        const { _id, userId, location, images,  desc, status } = req.body;
+        const { images, desc } = req.body;
+        const id = req.query.id;
+        const userId =req.query.userId;
 
-        if (!_id || !userId) {
-            return sendError(resp, "reportID and userId are required");
+        // Find the report by ID to get the user ID
+        const report = await ReportModel.findById(id);
+        if (!report) {
+            return sendError(res, 'Report not found');
         }
 
-        const existingReport = await ReportServices.getReportById(_id);
-        if (!existingReport) {
-            return sendError(resp, "Report not found");
+        const user = await UserModel.findById(userId);
+        if (!user) {
+            return sendError(res, 'User not found');
         }
 
-        if (existingReport.userId !== userId) {
-            return sendError(resp, "User is not authorized to update this report");
-        }
+        const status = "resolved";
+        const updatedReport = await ReportModel.findOneAndUpdate(
+            { _id: id },
+            { images, desc, status },
+            { new: true }
+        );
 
-        if (location) {
-            existingReport.location = location;
-        }
-        if (req.file) {
-            const imageUrl = await uploadImage(req.file.path);
-            existingReport.image = imageUrl;
-          }
-     
-        if (desc) {
-            existingReport.desc = desc;
-        }
+        // const emailBody = `Your report has been updated.`;
+        await mailTransport().sendMail({
+            from: 'infoReportARoad@gmail.com',
+            to: user.email,
+            subject: "Your report has been updated",
+            html: `<h1>Please check your application for more detail.</h1><p>Description: ${desc}</p>`
+        });
 
-        existingReport.status = status || "resolved";
-        await existingReport.save();
-
-        resp.json({ success: true, message: "Report updated successfully" });
+        res.json({ success: true, message: 'Report updated successfully', report: updatedReport });
     } catch (error) {
-        next(error);
+        console.error('Error updating report:', error);
+        sendError(res, 'Internal server error: ' + error.message);
     }
 };
 
 exports.notifyUser = async (req, res, next) => {
     try {
+        const _id = req.query._id;
         const userId = req.query.userId;
-        const { comment, imageUrl } = req.body;
+        const { comment, image } = req.body;
 
-        const report = await IncidentModel.findById(userId);
+        const report = await IncidentModel.findById(_id);
         if (!report) {
             return res.status(404).json({ success: false, message: 'Report not found' });
         }
 
-        const user = await User.findById(report.userId);
+        const user = await UserModel.findById(userId);
         if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
+            return sendError(res, 'User not found');
         }
 
         let incidentMessage;
@@ -225,25 +237,25 @@ exports.notifyUser = async (req, res, next) => {
         switch(report.title) {
             case 'Accident':
                 incidentMessage = 'There has been an accident reported in your area.';
-                subject = '';
+                subject = `There is a accident ${comment} : image ${image}`;
                 break;
             case 'Burglary':
                 incidentMessage = 'Your stolen item has been found please come to nearby lost and found!!!';
-                subject = '';
+                subject = `There is a accident ${comment} : image ${image}`;;
                 break;
             case 'Traffic Violation':
                 incidentMessage = 'A traffic violation has been reported in your area.';
-                subject = '';
+                subject = `There is a accident ${comment} : image ${image}`;;
                 break;
             default:
                 incidentMessage = 'An incident has been reported in your area.';
-                subject = '';
+                subject = `There is a accident ${comment} : image ${image}`;;
         }
 
         const emailBody = `${incidentMessage} Comment: ${comment}`;
         const attachments = [{
             filename: 'image.jpg',
-            path: imageUrl
+            path: image
         }];
         const htmlResponse = `<h1>${incidentMessage}</h1><p>Reason: ${comment}</p>`;
         
@@ -289,4 +301,8 @@ exports.DeleteUser = async (req, resp) => {
         resp.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
     }
 };
+
+
+
+
 

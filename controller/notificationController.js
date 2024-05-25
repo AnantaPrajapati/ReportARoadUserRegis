@@ -1,9 +1,10 @@
-const notificationService = require('./notificationService');
+
+const notificationService = require('../services/notificationService');
 
 async function createNotification(req, res) {
-    const { userId, message, relatedOrderId, actionType, isRead } = req.body;
+    const { userId, message,  actionType, isRead } = req.body;
     try {
-        const notification = await notificationService.createNotification(userId, message, relatedOrderId, actionType, isRead);
+        const notification = await notificationService.createNotification(userId, message,  actionType, isRead);
         res.status(201).json(notification);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -11,7 +12,7 @@ async function createNotification(req, res) {
 }
 
 async function getNotifications(req, res) {
-    const { userId } = req.query;
+    const userId = req.query.userId;
     try {
         const notifications = await notificationService.getNotifications(userId);
         res.json(notifications);
@@ -21,17 +22,18 @@ async function getNotifications(req, res) {
 }
 
 async function markAsRead(req, res) {
-    const { notificationId } = req.params;
+    const notificationId = req.query.notificationId;
     try {
         await notificationService.markAsRead(notificationId);
         res.sendStatus(200);
     } catch (error) {
+        console.error("Error marking notification as read:", error);
         res.status(500).json({ error: error.message });
     }
 }
 
 async function deleteNotification(req, res) {
-    const { notificationId } = req.params;
+    const notificationId = req.query.notificationId;
     try {
         await notificationService.deleteNotification(notificationId);
         res.sendStatus(200);

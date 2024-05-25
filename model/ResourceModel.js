@@ -5,41 +5,50 @@ const{Schema} = mongoose;
 
 const ResourceSchema =  new Schema({
 
-    reportId: {
-        type: Schema.Types.ObjectId,
-        ref: 'Report',
-    },
+    // reportId: {
+    //     type: Schema.Types.ObjectId,
+    //     ref: 'Report',
+    // },
+    // userId: {
+    //     type: Schema.Types.ObjectId,
+    //     ref: 'User',
+    //     required: true
+    // },
+    // reportId: {
+    //     type: Schema.Types.ObjectId,
+    //     ref: 'Report',
+    // },
     userId: {
         type: Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        // required: true
     },
  
     manpower:{
-        type: Number,
+        type: String,
         required: true
     },
     budget:{
-        type: Number,
+        type: String,
         required: true
     },
     time: {
-        type: Number,
+        type: String,
         required: true
     },
-    images: [{
+ 
+    statuss: { 
+        type: String,
+        // default: 'Work in progress' 
+    },
+    image: {
         type: String,
         required: true,
-    }],
-    status: { 
-        type: String,
-        default: 'Work in progress' 
-    }
-   
+    },
 
 },{timestamps:true});
 
-const ResourceModel = dbConnection.model('Resoucre',ResourceSchema);
+const ResourceModel = dbConnection.model('resources',ResourceSchema);
 
 module.exports = ResourceModel;
 

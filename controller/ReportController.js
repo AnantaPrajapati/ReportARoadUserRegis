@@ -7,6 +7,7 @@ const https = require('https');
 const ReportModel = require('../model/ReportModel');
 const { mailTransport } = require('../utils/mail');
 const RatingFeedbackModel = require('../model/RatingFeedback');
+const NewsModel = require('../model/NewsModel');
 // const {sendNotification}= require('../controller/ReportController');
 
 exports.createReport = async (req, resp, next) => {
@@ -40,7 +41,7 @@ exports.createReport = async (req, resp, next) => {
 };
 exports.IncidentReport = async (req, resp, next) => {
     try {
-        const { userId, location, image, title, desc } = req.body;
+        const { userId, location, image, title, desc, time } = req.body;
 
         // const user= await User.findOne({ email: email });
         // if (!user) {
@@ -53,15 +54,17 @@ exports.IncidentReport = async (req, resp, next) => {
         if (!image) {
             return sendError(resp, "Image dosen't exist");
         }
+        if (!time) {
+            return sendError(resp, "Image dosen't exist");
+        }
         if (!title) {
             return sendError(resp, "Please mention the severity");
         }
         if (!desc) {
             return sendError(resp, 'Fill up the description');
         }
-        const reportStatus = "pending";
 
-        let Report = await IncidentServices.createReport(userId, location, image, title, desc);
+        let Report = await IncidentServices.createReport(userId, location, image, title, desc, time);
         resp.json({ status: true, });
     } catch (error) {
         next(error);
@@ -122,7 +125,7 @@ exports.resolvedReport = async (req, resp, next) => {
 
 exports.deleteReport = async (req, res, next) => {
     try {
-        console.log(req.query.id);
+        // console.log(req.query.id);
         const { id } = req.body;
         let deletedData = await ReportServices.deleteReport(id);
         res.json({ status: true, success: deletedData });
@@ -131,6 +134,19 @@ exports.deleteReport = async (req, res, next) => {
         next(error);
     }
 }
+exports.deleteIncidentReport = async (req, res, next) => {
+    try {
+        // console.log(req.query.id);
+        const { id } = req.body;
+        let deletedData = await ReportServices.deleteIncidentReport(id);
+        res.json({ status: true, success: deletedData });
+    } catch (error) {
+        console.log(error, 'err---->');
+        next(error);
+    }
+}
+
+
 
 exports.getNews = async (req, res, next) => {
     try {
@@ -140,6 +156,17 @@ exports.getNews = async (req, res, next) => {
         sendError(error);
     }
 };
+exports.deleteNews = async (req, res, next) => {
+    try {
+        // console.log(req.query.id);
+        const id = req.query.id;
+        let deletedData = await ReportServices.deleteNews(id);
+        res.json({ status: true, success: deletedData });
+    } catch (error) {
+        console.log(error, 'err---->');
+        next(error);
+    }
+}
 
 exports.ratingFeedback = async (req, res, next) => {
     try {
@@ -174,3 +201,17 @@ exports.ratingFeedback = async (req, res, next) => {
         next(error);
     }
 };
+
+
+exports.DeleteNews = async (req, res) =>{
+try {
+    // console.log(req.query.id);
+    const _id = req.query._id;
+    const { comment } = req.body;
+    let deletedData = await NewsModel.findByIdAndDelete(_id);
+    res.json({ status: true, success: deletedData });
+} catch (error) {
+    console.log(error, 'err---->');
+    next(error);
+}
+}

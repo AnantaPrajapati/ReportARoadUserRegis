@@ -15,8 +15,8 @@ const RatingFeedbackSchema = new Schema({
     },
     Rating: {
         type: Number,
-        min: 0,
-        max: 5
+     
+     
     },
     feedback: String
 }, { timestamps: true });
